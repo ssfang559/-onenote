@@ -1,0 +1,224 @@
+	7. Viewing LDL CD Results in Calibre RVE 用RVE看结果
+1）     增强的模拟结果使Calibre RVE能够显示LDL CD结果的源、汇和连接的链接。这些链接可以很容易地突出显示和调试CD结果。
+     增强后的模拟结果可能会增加结果数据库的大小。如果要禁用增强的模拟结果，请在运行Calibre PERC之前将环境变量CALIBRE_PERC_LDL_RESULT_TEXT设置为OFF。例如:
+	setenv CALIBRE_PERC_LDL_RESULT_TEXT OFF
+Highlight结果：
+	在四五部分有介绍。
+	
+2）.在RVE中打开LDL CD结果
+	如何打开生成的DFM数据库：
+	
+3）.Debugging CD errors 使用RVE
+	打开一个layout
+	Start RVE 在calibre PERC 模式和打开的DFM数据库模式
+	点击 CD:perc_report_name.cd.rdb
+	
+	
+	A（um^2）:接触层或者孔的多边形面积，如果不是接触层或者孔，则A=0
+	CD：对于互连层，单位是mA/um; 对于孔和接触层，是mA/square um.
+	EM_Length(um)
+	EM_Width(um)
+	ERROR(%)
+	FIX
+	I(mA)
+	Layer
+	Limit
+	Net
+	R(ohms)
+	Subgraph_ID
+	Test
+	Vmax(mV)
+	Vmin(mV)
+	W(um)
+	Vertices :vertex 数量
+	Coordinates： x,y坐标
+	修改完错误之后要重新验证DRC、LVS、LDL CD
+	
+4）Highlighting LDL CD Simulation Results
+
+5）Highlighting Nets, Devices, and Pins in the Layout
+for LDL CD
+	
+	
+	1. Calibre xRC电阻提取rule的声明有以下两种 RESISTANCE SHEET RESISTANCE CONNECTION
+	1）RESISTANCE SHEET
+	定义用于计算导体层内流动电流的电阻的比例常数
+	Usage
+	RESISTANCE SHEET layer1 ‘[’ n1 n2 ‘]’
+		n1--每平方电阻单位的非负实数，它指定比例常数。
+	       n2设置指定段的最大长度。压裂后，沿设计轴线排列的矩形导电形状(边长大于n2)在第1层上被分割成奇数个相同大小的较小矩形。然后用寄生电阻表示。无论大小如何，直角形状和非矩形形状都不会被分割。通常，0微米确保互连线只沿其长度断裂，而不是沿其宽度断裂。将n2设置为小于标准互连宽度的值会导致过度压裂，从而导致更长的运行时间。
+	       在阻力压裂中，有两个不同的尺寸，宽度和长度。如果n2=0，这相当于将长电缆的长度限制在100um，但不进行二维压裂(无宽度压裂)。这是很好的宽互连电线。如果你设置n2=100，这就相当于长导线的长度被限制在100um。此外，还进行了二维压裂。二维断裂对金属板有好处。
+		要求切割数必须是奇数，且不能超过n2最大长度！
+	
+
+	2）RESISTANCE CONNECTION
+	定义比例常数，用于计算电流在两个传导层之间流动的电阻。电阻是基于在接触层或通孔存在的情况下，第1层和第2层之间的连接的面积和边缘效应。
+	RESISTANCE CONNECTION layer1 layer2 ‘[’n1 n2‘]’
+	n1 -一个非负实数，它是电阻乘以面积(欧姆*微米平方)，它指定面积比例常数的倒数。理解的是某个面积的总电阻值？
+	n2 -一个非负实数，以电阻为单位，它指定了反边比例常数。通常，n2 = 0。
+	提取器使用以下公式计算连接电阻：
+	
+	Eg:
+	CONNECT layer1 layer2 BY via
+	RESISTANCE CONNECTION layer1 layer2 [0.83 0]
+	
+	这个例子的公共区域是所有涉及到的层的公共区域，即layer1 layer2 via的公共区域。
+	
+	
+8.example中的内容：
+	get_layer_name():返回寄生电阻的layer名
+	get_voltage_drop():返回寄生电阻上的电压降，单位为伏特。返回值为正。但是，足够接近0的值会被截断为0。
+	TVF Numeric Command Object:TVF数值对象表示简单的数字、数值变量或数值Device属性函数的输出。可以使用[$object]访问对象中包含的值来计算对象。
+	例如，要访问传递给calc_eff_a函数的L的值，计算命令参数变量$L，如下所示:
+	
+	
+	
+
+第十一章 CD 电流密度检查（layout netlist）
+	1. CD overview
+	       Calibre PERC逻辑驱动版图电流密度(LDL CD)检查计算通过版图互连层的电流流，并输出符合指定值的基于多边形的结果。这个应用程序使用Calibre PERC, Calibre nmDRC, Calibre nmLVS, DFM和Calibre xRC应用程序在一个包中执行计算。       
+	      电流密度通过规则文件中指定的校准电阻提取语句的层从源到汇进行测量。指定电源上的电流值和接收器上的电压值。在电阻层内部计算引脚(或端口和引脚)之间的电阻值，然后计算电阻层上多边形的电流密度。电迁移(EM)计算也进行了。
+
+	2. 需要以下文件才可进行CD检查：layout ， LVS 提取文件， PERC rule文件，calibre XRC rule文件
+
+	3. 电流密度（CD）层和衡量单位：
+
+
+Width- and Spacing-Dependent Resistance Rules（依赖宽度和间距的电阻规则）
+      如果使用规则文件提取电阻，并且在生成规则文件时使用依赖于宽度和间距的表，则使用多边形的实际宽度，而不是绘制的宽度。此外，只有使用Calibre 2010.1或更高版本生成这些规则文件时，才可以使用这些规则文件。如果使用了来自Calibre早期版本的此类提取规则，则会发出运行时错误。
+
+Electromigration Analysis（电迁移率分析）
+        LDL CD流支持通过per_ldl::execute_cd_checks -em选项计算EM的长度和宽度。这些数据连同连接的EM层段的标识符属性一起被写入CD结果数据库。EM长度是网络上寄生电阻链的最长路径长度。EM宽度是来自该最长路径的最宽寄生电阻。
+
+PERC LDL CD Constraint用户程序具有get_em_length()和get_em_width()函数，以及PERC::export_pin_pair -source_current和-sink_voltage选项，对于动态EM约束分析非常有用。
+
+	4. Calibre PERC LDL CD的输入输出文件如下表：
+
+
+
+
+	5. Running the Calibre PERC CD Flow 运行CD流程
+layout必须LVS clean.
+有可能在layout中有端口的text 短接，这不会导致问题，特别是如果意图为同一个端口节点提供不同的电流源。
+一个Calibre PERC规则文件，至少包含一个初始化过程。
+
+Procedure程序:
+(1)检查您的Calibre xRC规则文件，并确保其中有一组完整的电阻提取语句。强烈推荐使用经过calibrated的xRC规则文件。
+(2)确保初始化过程为要检查的端口/引脚对定义了正确的网络类型和路径类型传播器件引脚。例如:lvs power\ground name and top-level 端口名
+		proc init {} {
+		perc::define_net_type "Power" lvsPower
+		perc::define_net_type "Ground" lvsGround
+		perc::define_net_type "IOPad" {IN? OUT?}
+		perc::create_net_path -type R -pin {p n}
+		}
+(3)确保规则文件中有必要的perc::export_pin_pair函数，以计算感兴趣的引脚对的电阻。
+(4)检查Calibre PERC规则文件，确保为运行Calibre PERC检查指定了所需的PERC Load语句。不要使用XFORM选项。确保指定要加载包含perc::export_pin_pair命令的Tcl过程。
+(5)在规则文件中添加PERC LDL Layout Reduce Top Layers语句，其中包括所有电源网格金属层(不直接连接到器件引脚的低电阻层)。
+(6)添加PERC LDL CD约束规格到您的规则文件:
+		PERC LDL CD poly CONSTRAINT VALUE 0.2
+		PERC LDL CD m1 CONSTRAINT VALUE 0.5
+		PERC LDL CD m2 CONSTRAINT VALUE 0.5
+		这些是报告的电流密度值的下限。PERC LDL CD Constraint语句还支持用户程序应用动态约束以及定义全局默认约束
+(7)使用perc_ldl::execute_cd_checks命令(还有可选的perc_ldl::design_cd_experiment命令)向规则文件添加一个TVF Function块和一个Tcl过程。
+		例如:
+		TVF FUNCTION perc_cd_checks [/*
+		proc execute_cd {} {
+		perc_ldl::execute_cd_checks -I 1 -V 0
+		exit
+		}
+		*/]
+		-I参数设置源处的电流(单位为毫安)。-V参数设置接收器上的电压。需要在过程结束时使用exit命令。
+(8)添加DFM YS自动启动语句，调用步骤4中编写的TVF函数和Tcl过程。
+		DFM YS AUTOSTART perc_cd_checks execute_cd
+(9)添加DFM数据库声明到你的规则文件
+		DFM DATABASE "dfmdb" OVERWRITE REVISIONS [DEVICES ORIGINAL PINLOC]
+(10)指定 LVS Push Devices NO 这样做是为了防止由于请求引脚位置信息而触发警告。
+(11)确保您的LVS连接提取规则和您的电阻提取规则在运行程序中。
+(12)运行calibre -perc -ldl 命令
+		calibre -perc -hier -ldl -turbo -hyper rules |tee logfile
+		超缩放只适用于运行的电路提取部分。
+运行生成的结果：
+	Run transcript
+	Perc report
+	CD report：perc_report_name.cd
+	ASCII 结果数据：perc_report_name.cd.rdb
+	Calibre YieldServer 数据 ，由DFM数据库声明
+	SVDB目录文件，如果指定的话
+	perc_report_name.cd.rdb是一个DRC或ERC数据库，可以与Calibre RVE和布局查看器一起使用来调试错误。结果是一个多边形，其中电阻已与电流密度一起计算。
+	DFM数据库是一个YieldServer数据库，可以通过Calibre RVE为Calibre PERC打开。DFM数据库包括per_report_name .cd.rdb。您可以使用PERC RVE来查看和突出显示结果、创建直方图以及突出显示网络和其他设计元素。
+
+每单位面积的电流：毫安/平方微米
+每行宽电流：毫安/微米
+Length/width：微米
+
+	6. FULL PATH Check in LDL 全路径检查
+	LDL电阻检查模拟以两种基本方式进行:源和汇在同一网络上，源和汇在不同的网络上。（source ， sink）
+	当源和汇在同一个网络上时，perc::export_pin_pair用于导出引脚。
+	当源和接收器在不同的网络上时，perc::export_connection和perc::export_pin_pair与-path选项一起使用。后一种方法称为“全路径”检查。它既适用于CD检查，也适用于P2P检查。本讨论的重点是建模电流密度，但它同样适用于点对点电阻。
+
+9.相关LDL命令
+perc::export_pin_pair：
+	用法：perc::export_pin_pair ‘[’ list device_1 pin_1 device_2 pin_2 ‘]’ {-cd | -p2p “R_value”}
+	[-annotate ‘[’list ‘[’list name1 value1‘]’ ‘[’list name2 value2‘]’‘]’]
+	[-path name]
+	[-sink_voltage voltage] [-source_current current]
+	定义用于LDL的pin，被此命令匹配到的一对pin会被写入到perc_ldl_data目录。此文件供工具内部使用。
+	[ list device_1 pin_1 device_2 pin_2 ]构造是Tcl命令的文本集，它定义了一组器件或子电路和引脚(或端口)。参数可以是变量。
+	-cd 或者 -p2p必须要指定其一
+	      当此命令用于点到点电阻计算时，pin_N参数定义了计算电阻的引脚。perc_ldl::execute_p2p_checks命令使用该命令导出的pin码。
+	      当该命令用于电流密度检测时，pin_1作为-I选项的源引脚，pin_2参数作为perc_ldl::execute_cd_checks命令的-V选项的sink引脚。
+	      R_value定义了要在P2P结果中报告的电阻值的下限。来自一个公共电源的所有引脚对都应具有高于此值的电阻，以便报告该电源。per_ldl::design_p2p_experiment -report_by选项控制结果中针对的组织方式。
+	      注解选项允许自定义引脚对的名称-值注解。注释名称和值都是字符串。使用dfm::get_ldl_data -user_annotation_list选项访问这些注释，该选项返回注释的Tcl列表。对于P2P运行，每个引脚对都有在调用perc::export_pin_pair命令时定义的所有注释。
+	      对于CD运行，许多引脚对可以组成一个CD实验中的单个测试。因此，每个结果都包含该测试中所有引脚对的所有用户定义注释。
+	
+perc::count:返回符合条件的device数量
+	执行满足命令参数集条件的器件(实例)计数。实例必须满足所有指定的条件才能参与计算。
+	如果没有使用可选参数，则所有设备都被计数。如果没有选择设备，则计算结果为“NaN”。
+	在一个Tcl过程中，这个命令可以被调用任意次数。
+	
+perc::define_ldl_checks : 定义用于从Calibre PERC导出元素的检查名称。
+	Usage
+	perc::define_ldl_checks check_name_list
+
+perc::export_net 从Calibre PERC运行输出net用于LDL DRC分析。
+	Usage
+	perc::export_net net_iterator -check_type check_type_name
+	[-annotate ‘[’list ‘[’list name1 value1‘]’…‘]’]一个可选参数集，用于指定用户定义的网络注释。注解选项的参数是一个Tcl列表或列表的列表。语法中显示的括号和列表关键字是字面上的Tcl命令。nameN valueN形参是字符串的名称-值对，每个字符串必须是单独列表的一部分。避免使用包含空格的字符串作为名称或值。这些元素可以被解析为列表中的独立元素。
+
+11.perc_ldl::excute_cd_checks     执行电流密度检查实验运行
+Usage
+perc_ldl::execute_cd_checks
+-I source_current  一个必需的参数集，用于指定perc::export_pin_pair命令中列出的第一个引脚处的源当前值。source_current是一个以毫安为单位的正浮点值。如果使用了per_ldl::design_cd_experiment并且包含了-I选项，或者使用了perc::export_pin_pair -source_current选项，那么这个选项将被忽略(并且不需要指定)。
+-V sink_voltage
+[-cd_experiment_list list]
+[-constraint_hash constraint_hash]
+[-em]
+[-error_threshold percentage]
+[-report_threshold percentage]
+[-limit_lvsTopPorts number]
+[-user_via_reduction]
+
+
+10.perc_ldl::design_cd_experiment
+定义电流密度实验用于LDL CD 运行
+通过perc::export_pin_pair命令对给定的引脚对集合使用不同的参数，定义可以并发运行的电流密度实验。对于给定的rule_name，可以使用-experiment_name参数指定实验名称。
+Usage
+perc_ldl::design_cd_experiment -rulecheck rule_name
+[-experiment_name name]
+[-I source_current]
+[-V sink_voltage]
+[-group_by { rulecheck | pinpair | source | sink | path }]一个可选参数集，定义如何根据指定rule_name的导出引脚对进行相关实验。
+[{-group_by_annotation | -group_by_annotation_name} annotation_name]
+[-short_expanded_sources | -short_all_sources]
+[-comment “string”]
+
+12.PERC LDL CD <layer_name> CONSTRAINT <value>
+layer_name为电阻层。该值是一个阈值电流密度，用于开始报告层的差异。
+示例：
+
+
+13.PERC LDL Layout Reduce Top Layers 指定顶层金属布线层，以优化LDL布局处理。
+Usage
+PERC LDL LAYOUT REDUCE TOP LAYERS layer [layer …]
+至少指定一个金属层
+指定LDL运行的顶级金属绕线层。指定这些层可以优化layout处理。使用此语句可显著提高性能，因此强烈建议几乎所有LDL规则文件都使用此语句。
