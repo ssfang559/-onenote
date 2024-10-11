@@ -1,0 +1,219 @@
+7.NETLIST_NODENAME_NETNAME
+保留非端口网络的子节点之一的网络名称。
+Syntax
+NETLIST_NODENAME_NETNAME: YES | NO
+YES 保留非端口网络的子节点之一的网络名称。使用不带引脚分隔符和正整数的网络名命名子节点，指定在提取和创建网络列表期间用作分层分隔符的字符
+If a net has a top-level port node, for example, *|P (DSPF) or *P (SPEF), then NETLIST_NODENAME_NETNAME:YES does not rename or generate a node for that net. 不会重命名或者生成一个节点
+When a net has at least one *|S node (DSPF) or *N node (SPEF), one of those *|S or *N is renamed to match the *|NET or *D_NET net name.
+
+
+
+Run StarRC
+1.GUI界面
+
+2.batch mode
+StarXtract
+[-cleanXREF][-cleanD][-cleanFS][-cleanXFS] 清除xref
+[-cleanTFS][-cleanN]  清理翻译和现场求解程序
+[-cleanX starrc_command: new_value][-cleanT][-clean] 清理提取程序
+[-gui]
+[-ultra | -custom] 使用STAR-RC2_ULTRA_MANAGER LICENSE key only
+[-cdnlicsvr] 
+[-tech_out]
+[-v] 显示版本
+[-h]
+[-iapinetmap]
+[-iapixindump]
+[-pio]
+[-skip]
+star_cmd_file [nets_cmd] 指定star_cmd文件
+
+
+8.RC模式：指定提取的类型和生成的网络列表的范围。
+C/CC模式：在提取和网表生成过程中，寄生耦合电容集总/不集总到地。
+
+
+9.EXTRA_GEOMETRY_INFO  报告来自StarRC阻力提取的内部节点边界框信息。
+Syntax
+EXTRA_GEOMETRY_INFO: NODE | NONE
+        报告来自StarRC阻力提取的内部节点边界框信息，可以作为网表节点部分的尾部注释，也可以作为银河系寄生数据库中的节点属性。该命令只支持SPF、STAR、NETNAME、SPEF、SBPF和MW格式的netlist。边界框数据中的尺寸始终是绘制的，不受NETLIST_UNSCALED_COORDINATES命令的影响。
+
+
+
+
+1.ITF file （New Xtraction Generic Regression Database) 新提取通用回归数据库
+nxtgrd(新提取通用回归数据库)输出文件是一个包含电容、电阻和层信息的数据库，这些信息可以加密。ITF文件也包含在数据库输出文件中。内部字段求解器对一组广泛的基本结构进行操作，生成nxtgrd文件。StarRC使用nxtgrid文件通过模式匹配来计算实际layout的寄生。您可以使用grdgenxo命令的-encrypt选项加密位于nxtgrd文件中二进制电容表顶部的ITF文件副本:
+	Grdgenxo -encrypt itf_file
+	
+  
+       ITF文件定义了工艺的横截面概要。这是导体和介电层定义语句的有序列表。所述层从最上面的介电层定义到最下面的介电层，不包括衬底。当您阅读ITF文件的文本时，层的定义顺序与您在流程的横截面视图中看到的顺序相同。以与物理过程一致的方式逐层指定ITF截面层空间参数。
+在ITF截面的最低层应该始终是一个介电层。衬底是一个保留的关键字，是指一种特殊的导体，其顶面高度为0; 假定它在最低限定电介质的下面。您没有在ITF文件中定义substrate。
+定义通过层的语句遵循工艺截面，并且仅相对于有效导电层定义。
+导体和电介质的高度完全由它们指定的顺序和下层的厚度决定。当您指定新的导体或介电层时，除非包含MEASURED_FROM语句以显式指定底平面的位置，否则该层的底平面恰好是最低介电层的顶平面。ITF文件中列出的最低介电层(最低物理层)从基板层自动测量。在全平面过程中，过程截面不包含任何垂直相交的不同高度的导体，是最简单的模型。附录中可以找到横截面ITF的例子
+
+2.生成TLUPlus模型
+TLUPlus模型描述了先进的工艺效果，可以被Synopsys放置和路径工具中的寄生提取器用于建模。
+使用grdgenxo命令生成TLUPlus模型。工艺技术的描述必须在互连技术格式(ITF)文件中提供。这个文件可以由铸造厂提供，或者你可以用下面的命令创建这个文件:
+	grdgenxo -itf2TLUPlus -i ITF_file {-f format_file} -o TLU_file
+
+3.KEEP_VIA_NODES 
+	Syntax
+	KEEP_VIA_NODES: YES | NO   将通孔节点定义为通孔电阻连接的原始节点。原始节点可能会减少，或者与其他节点合并，具体取决于所使用的导体配置和减少。打开模式将保留这些节点。
+	YES -> 保留通过电阻器连接的原始节点。
+	NO -> 不一定保留原始节点.这是默认值。
+
+10.PLACEMENT_INFO_FILE 指定输出位置信息的生成。
+Syntax
+PLACEMENT_INFO_FILE: YES | NO
+          StarRC通过详细标准寄生格式(DSPF)文件与HSIM接口，用于分层和平面布局后仿真流。Synopsys产品HSIM可以接收分层DSPF和平面DSPF，进行分层或扁平定时和可靠性分析。
+可靠性分析的重要输出是显示HSIM提供的电压(IR)下降和电迁移违规的热图。由于HSIM产品是基于网表的，因此可靠性分析热图是利用StarRC在DSPF网表中提供的节点信息(*|S， *|I， *|P)生成的。在平面提取中，所有节点都相对于顶部单元的原点显示，并且可以绘制无歧义的热图。然而，在分层流中，分层单元的DSPF中的每个节点都是根据其起源显示的。为了将这些节点映射到下一级层次结构，您必须知道具有旋转和翻转属性的单元格在下一级层次结构中的位置。
+
+4.EXTRACT_RES_BODY_COUPLING          指定提取与电阻体和电阻体接地的金属互连之间的耦合电容。
+Syntax
+EXTRACT_RES_BODY_COUPLING: YES | NO
+
+5.REDUCTION 指定寄生网表的reduce（生成的spf）
+Syntax
+REDUCTION: HIGH | LAYER | NO_EXTRA_LOOPS | TOPOLOGICAL | YES | NO
+HIGH：为设备级寄生提取执行最大的网络列表缩减。此设置旨在减少spice级模拟器的过多运行时间，其中模拟运行时相对于提取运行时占主导地位。使用REDUCTION:HIGH生成的寄生网络列表的大小等于或小于使用REDUCTION:YES生成的网络列表，相对于REDUCTION:YES，提取运行时间增加10-20%。未启用LEF/DEF或Milkyway单元级提取，并且当源数据库为LEF/DEF或Milkyway时将生成错误消息。
+YES：指定在提取过程中减少寄生网表。这是默认值。
+NO：不减少
+LAYER:类似于REDUCTION:YES，除了REDUCTION不会发生在不同的导体层上。
+NO_EXTRA_LOOPS: 引入寄生网表作为约简算法的结果。对于无法解释电阻回路的延迟计算器，此设置可以减少较小程度的网表。限制算法不产生电阻回路产生更大的寄生网表(10- 20%)比实现与REDUCTION:YES。此选项不能防止寄生网表中由于提取布局的拓扑结构而发生的循环。例如，由两个或多个平行过孔连接的重叠金属即使使用REDUCTION: NO_EXTRA_LOOPS也可以在寄生网表中产生网格，因为这些网格直接反映了布局的物理拓扑。
+TOPOLOGICAL：类似于REDUCTION:LAYER没有时序误差控制。该选项允许StarRC为不同的过程或温度角创建类似的RC网络拓扑。不同的工艺或温度角具有不同的R和C值，如果减少误差控制基于R和C值(例如，定时)，则不可能为不同的角维护相同的拓扑。
+
+提取阻值
+
+6.NETLIST_TAIL_COMMENTS 提供寄生电阻器件的几何信息，作为NETLIST_FILE中netlist的注释。
+Syntax
+NETLIST_TAIL_COMMENTS: YES | NO
+
+
+11.ITF文件 -
+1）CONDUCTOR 参数解释：
+
+
+
+
+2）AIR_GAP_VS_SPACING 参数解释：定义air_gap参数
+Syntax
+AIR_GAP_VS_SPACING {
+SPACINGS { s1 s2 .. sn }	两个导体之间的space，单位是microns
+AIR_GAP_WIDTHS { w(s1) s(s2) ... s(sn) }	在相应的间距值处形成的气隙宽度。S1的值必须和SMIN的值一致。
+AIR_GAP_THICKNESSES { t(s1) t(s2) ... t(sn) }	厚度
+AIR_GAP_BOTTOM_HEIGHTS { h(s1) h(s2) h(sn) }	气隙底部距离导体底部相应间距值的高度。
+}
+
+3）VIA参数解释：描述
+VIA via_name {
+FROM = layer1
+TO = layer2
+[CRT1 = lin_coeff
+| [CRT2 = quad_coeff]
+| [CRT_VS_AREA {...}]
+| [TO = nominal_temp]]
+[RHO = rho_value
+| RPV = rpv_value AREA = area_value	每个孔或者是每个contact的阻值
+| RPV_VS_AREA {...}]	不同size的孔阻值
+[ETCH_VS_CONTACT_AND_GATE_SPACINGS CAPACITIVE_ONLY {...}
+| ETCH_VS_WIDTH_AND_SPACING CAPACITIVE_ONLY {...}
+| ETCH_VS_WIDTH_AND_LENGTH CAPACITATIVE_ONLY {...}]
+}
+
+2）SIDE_TANGENT:指定从导体侧面垂直方向的角度位移的正切值，上宽下窄为正值，上窄下宽为负值。图中分别为tan20，tan(-20)
+
+设W为不带任何梯形增强的导体宽度，t为导电层的垂直厚度，则:
+W_top = W + (SIDE_TANGENT * t)
+W_bottom = W - (SIDE_TANGENT * t)
+W_center = W
+t = conductor thickness
+中心宽度(W_center)不受梯形调整的影响。还要注意，梯形截面实际上是一种电容效应，因为只要顶部和底部宽度大于或等于零，截面面积就不会改变。
+
+
+3）LAYER_TYPE指定layer type，（可提高电容提取精度）
+Syntax
+LAYER_TYPE = GATE | FIELD_POLY | DIFFUSION | TRENCH_CONTACT
+GATE-> 识别代表器件栅极的导电层。如果没有为栅场多晶硅指定单独的ITF导电层，则将组合栅场多晶硅层指定为LAYER_TYPE = gate。
+FILED_POLY-> 识别表示器件区域外的场多晶硅的导电层。
+DIFFUSION-> 标识表示器件源扩散区或漏扩散区的导电层。
+TRENCH_CONTACT-> 识别代表沟槽接触的导电层。这包括可在器件区域内外使用的m1 -扩散沟槽触点和m1 -多晶硅沟槽触点。
+
+12.query_cmd
+	运行命令-> calibre -64 -query_input query_cmd -query svdb | tee cci_query.log
+	
+13.calibre -query
+	Usage  最后三个命令行参数的顺序很重要，可以防止参数名与命令使用的其他选项混淆
+	calibre [-cb][-nowait | -wait n][-lmconfig licensing_config_filename] 一个可选参数，指定使用Calibre Cell/Block许可, -onwait是没有license时退出不等待，-wait是等待n分钟
+	[-query_input query_file] 
+	-query [svdb_directory] [layout_primary]
+
+14.NETLIST_PARASITIC_RESISTOR_MODEL: YES          直接输出寄生电阻模型到寄生网表。可 输出寄生电阻的layer信息。默认为NO
+
+																				
+
+	
+
+图中lvl为starrc_mapping中的对应layer的层次
+
+
+
+寄生网表中打印的模型名称基于从中提取模型的数据库层。如果给定的GRD层需要相同的模型层，那么在映射文件中将相应的数据库层映射到相同的模型。例1中左一列为database层，左二为GRD层，左三为阻值，左四为model层。
+如果一个非物理电阻被引入到网表中，它不会在网表中产生。
+如果没有在数据库中指定相应的电阻器MODEL，则不会将该电阻器的模型打印到寄生网表中，并在StarRC摘要文件中发出警告。
+
+	15. 处理重叠的wells     
+	Starrc_mapping    precedence优先级？  StarRC增加了一种方法，可以确定地设置基材的垂直轮廓。指定MAPPING_FILE语法，为映射到基板的层设置垂直优先级。
+	
+
+Bulk  	1
+DNW 	  2
+NW、PW	3
+WL、BL	4
+数字越大，垂直优先级越高。
+如果两层具有相同的优先级值，并且这两层的多边形在layout上重叠，那么StarRC将随机确定最顶层，以实现耦合电容连接和IGNORE_CAP命令功能。未指定优先级的基板映射层的优先级值为零，这意味着它们的优先级低于所有其他层。
+
+16.关于starrc_mapping文件
+NUM	rule	mark
+1	Every layer in CONNECT needs to be mapped to a conductor or via	在connect的每一层需要被mapping到一个conductor或者via
+2	Device terminal layer needs to be mapped	Device terminal层需要mapping
+3	Nonterminal device layer should not be mapped , one exception : RES device body.	非terminal的device层不应被mapping，一个例外：电阻器件
+	      1) mapped to conducting layers : impact RES body with surrounding nets	
+	      2) remove_layers : ignore RES body impact to surrounding nets.  (current cxmt)
+4	If runset layer CONNECT or device terminal cannot mapped , should be listed in remove_layers	如果connect层或者device terminal层不能被mapping，应该被列入remove_layers
+5	Bulk layer mapping must be considered for well res,dio,BJT/power net/bulk terminals	bulk层mapping必须考虑well res,dio,BJT,power net,bulk terminals
+6	Map port layers as marker layers to obtain top-level ports. TEXT to polygon function.	Mapping 端口层为mark层来获取顶层端口。text到多边形功能，calibre CCI不需要，query里已经存在。
+	         caliber CCI flow don’t need. Already exists in query server.
+
+17.输出LayerInfo 相关信息的命令。Runlpe/lpe.cpnfig
+
+输出的spf网表格式：包含subnode等节点信息以及层信息。
+
+18.ETCH_VS_WIDTH_AND_SPACING 为不同的通孔大小和间距指定不同的通孔蚀刻值。这个选项可以帮助您在提取寄生组件时考虑实际的合成模式。这一点很重要，因为OPC(光学接近校正)不能修复所有的接近效果，并且实际的模式可能与绘制的掩模模式不同。您可以在CONDUCTOR语句中指定此选项。;正蚀刻值表示收缩，负蚀刻值表示宽度增加。
+
+
+19.RPSQ_VS_WIDTH_AND_SPACING  使用此选项对由于宽度和间距不同而改变RPSQ的影响进行建模。
+
+
+	20. Power_extract
+	YES: --> POWER_EXTRACT:YES  	抽power、ground
+	NO --> POWER_EXTRACT:NO    	不抽power、ground
+	LRSD -- >  POWER_EXTRACT:DEVICE_LAYERS	抽power net的RC，这些power层在mapping文件中指定为device layer（用device层关键字提取映射文件中指定层的电网的电阻和电容，并提取所有网络。(仅限Hercules和Calibre)）
+
+
+根据映射文件中的device_layer关键字提取VDD和VSS电网的触点、栅极和扩散电阻，同时提取所有电网。实例部分网表列出了与信号网一起连接到这些电网的所有设备。
+
+21.
+
+
+22.SW_T, 定义conformal layer侧壁厚度，默认是介质层厚度值
+
+
+TW_T, 定义conformal layer topwall厚度，默认是介质层厚度值
+
+23.3D_IC_FLOATING_SUBSTRATE: YES，打开会出现fsub_starrc, 工具会将floating的地线替换成fsub_starrc
+
+
+
+24.
+
+
