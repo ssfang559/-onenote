@@ -1,0 +1,117 @@
+1.progn   ->不需要局部变量和跳转的时候使用。只应在绝对必要时使用。它的过度使用是所有技能代码效率低下的最大原因之一。从一段代码的中间返回不仅非常昂贵，而且还可能导致代码难以阅读和理解。与所有高级编程语言一样，go (SKILL ' goto '语句)的使用是非常不鼓励的。在某些情况下，这是必要的，但这种情况很少。
+2.let -> 需要局部变量，不需要跳转的时候使用
+3.prog -> 需要局部变量和跳转的时候使用
+在let里，函数的最后一个表达式或语句的结果作为返回值
+在prog里使用return来指定返回值，没有则返回nil。可以有多个return，遇到哪个就执行哪个并跳出当前函数。
+
+
+4.@rest  @key @optional
+@rest args一般搭配，args传进来是个列表，代表可以。传进来任意个数参数。
+
+
+@optional args1… 只需指定参数名，不带参数名即可调用。
+
+
+@key 关键字参数，必须同时指定参数名和参数值。
+
+
+组合参数，@optional和@key不能同时使用，固定位置参数必须在前，固定位置参数必须给值
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+PCELL-----------------------------------------------------------------------------------------------------------------------------------------------------
+
+1.pcDefinePCell     	pcDefinePCell(	创建参数化的(超级)主cellview。该函数使您能够传递Pcell的SKILL定义，包括其参数列表	
+	l_cellIdentifier
+	l_formalArgs
+	body_of_code
+	)
+	=> d_cellViewId / nil
+2.dbAddObjectToGroup	dbAddObjectToGroup(	添加一个数据对象到一个group。为了兼容性，参数也以相反的顺序接受，除非d_object本身是一个组。
+返回值：成功添加到group的对象成员/nil	
+	d_group
+	d_object
+	)
+	=> d_groupMem / nil
+3.dbCreatePath	dbCreatePath(	注意:dbCreatePath是一个核心的数据库SKILL函数，它只检查创建路径的数据库单元的偶数倍。因此，创建的路径可以脱离网格。要创建具有所需约束和额外自动化级别的路径，请使用最终应用程序SKILL函数，例如leCreatePath。	Examples
+	d_cellView	Tips: points至少指定两个坐标。当是两个坐标加一个长度，则从两点坐标连线向两边生长。	dbCreatePath(cv 2 list(0:0 0:1 1:1 1:0) 4 "extendExtend")
+	txl_layerPurpose		dbCreatePath(cv list("background" "drawing") list(1:6 1:1 2:1) 2 )
+	l_points		dbCreatePath(cv list ("background") list(0:0 1:0 1:2 2:3) 2 "squareFlush")
+	n_width
+	[ t_pathStyle ]
+	)
+	=> d_path / nil
+4.dbCreateRect	dbCreateRect	创建矩形	Example
+			dbCreateRect(cv list(87 "pin") list(0:0 6.3:8.7))
+	dbCreateRect(
+	d_cellView
+	txl_layerPurpose
+	l_bBox
+	)
+	=> d_rect / nil
+5.dbCreateGroup	dbCreateGroup(	创建group。在指定的cellview中创建指定组定义的组。如果不指定组定义，则创建传统的不受限制的组，该组允许所有类型的对象和所有类型的组作为成员，并且可以存在于任何数据库中。	Examples
+	d_cellViewID		dbCreateGroup(cv "myGroup1" list("set" "ordered"))
+	t_groupName		在cv cellview中使用指定的属性创建groupDef无限制的DM4组myGroup1。
+	l_groupType		
+	[ t_groupDefName ]		dbCreateGroup(cv "myGroup2" list("collection" "ordered") "net")
+	)		Creates the DM4 group myGroup2 of the groupDef net in the cv cellview with the specified attributes.
+	=> d_group / nil		
+6.dbCreateLabel	dbCreateLabel(	创建label。	Example
+	d_cellView	l_point的类型：	dbCreateLabel(cv 4 1:1 "myLabel" "centerLeft" "R0" "roman" 2)
+	txl_layerPurpose		在特定的cellview cv中创建一个标签，指定层4，目的绘图，原点1:1，文本myLabel，对齐中心左，方向R0，字体罗马，高度2。
+	l_point		
+	t_label
+	t_just
+	t_orient
+	t_font
+	x_height
+	)
+	=> d_label / nil
+7.bBOX含义	获取对象的坐标属性	用~>获取	
+			
+8.dbCopyShape	dbCopyShape(	使用给定的转换将一个形状复制到指定的cellview。	Eg:
+	d_shapeId	注意:(仅限高级节点)默认情况下，不复制着色信息。要复制颜色信息，请在使用dbCopyShape之前将cdba copympatattributes环境变量设置为t。	
+	d_cellviewId	l_transform: 可选列表值，用于转换复制的形状。列表包括:原点偏移，旋转和大小。默认为'(0:0 "R0" 1)	这里的三个坐标点是相对于要复制的原始图形的位移，以原始图形为原点参照。
+	[ l_transform ]	
+	)
+	=> d_newShapeId / nil
+9.dbPointArrayAndDot	dbPointArrayAndNot(	返回从第一个输入点列表的区域派生的点列表列表，该列表不与第二个输入点列表的任何区域重叠。结果点列表在指定的cellview中创建。	
+就是一个AND NOT的操作，在第一个坐标的区域中NOT掉第二个坐标围成的区域
+	d_cellViewId
+	l_pointList1
+	l_pointList2
+	[ x_maxPoints ]
+	)
+	=> l_pointList / nil
+10.isBBox	isBBox(	验证给定的边界框是否被正确定义。	Example
+	l_bBox	注意:此功能不能用于Pcells。	isBBox( list( list( 0 0 ) list(5 5)) ) => t
+	)
+	=> t / nil
+11.lowerLeft	lowerLeft(	返回给定边界框的左下点。不验证边界框并假定它是正确的。	Example
+	l_bBox		lowerLeft( list( list(0 0) list(5 5)) => list(0 0)
+	)
+	=> l_list
+12.upperRight		返回给定边界框的右上点。	
+13.cdfCreateBaseCellCDF	cdfCreateBaseCellCDF(	为单元格创建基本级别的CDF描述。CDF描述是在没有参数或仿真模型的情况下创建的。	Eg:
+	g_cellId	注：必须打开cell并且为编辑模式，使用该函数之前，必须保证cdf描述不存在在该cell。如果该cell已经有cdf描述，那么这个函数将不会更新已经存在的cdf描述。	
+	[ ?doneProc t_doneProc ]		先用cdfGetBaseCellCDF判断是否存在cdf，如果存在则删除，然后用cdfCreateBaseCellCDF来创建该cell的cdf
+	[ ?formInitProc t_formInitProc ]		打印ID：
+	[ ?fieldWidth x_fieldWidth ]		
+	[ ?fieldHeight x_fieldHeight ]
+	[ ?buttonFieldWidth x_buttonFieldWidth ]
+	[ ?promptWidth x_promptWidth ]
+	)
+	=> g_cdfDataId / nil
+14.GROW	GROW input-layer dx dy {dx2 dy2} trapfile {OUTPUT c-name l-num {d-num}}	放大一个层的一边，dx dy决定增长的方向和数量，可以指定两个不同的方向在单个命令中。	GROW lay1 -0.5 -0.0 lay2 ;Grow left edge 0.5 microns左边的边长0.5um
+		相对的是SHRINK	...
+			GROW lay5 0.25 0.25 lay6  ;SIZE MEBES data in
+			RELOCATE lay6 BY -0.125 -0.125 lay7 ;layf by 0.125,which  左边长0.125，下边长0.125
+			*END
+15.pcGrowBox	pcGrowBox(	增长或减小指定box的size,返回box坐标	pcGrowBox( '( 0:0 2:2 ) 5.5 ) 
+	l_pointList		    =>((-5.5 -5.5) 
+	xf_margin		     (7.5 7.5) )
+	)
+	=> l_incrementedPointList / nil
+
+
+		
