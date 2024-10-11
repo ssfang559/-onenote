@@ -1,0 +1,174 @@
+cdl / spice netlist区别
+CDL只是表达了电路之间的连接关系，可以用于版图和电路图匹配时使用，cdl基本是spcie格式的，略有不同，主要是用来做LVS的，只包含LVS中需要比较的参数。
+spice不仅可以描述电路的连接关系。还能当做测试平台，用来做仿真，包含最完整的参数。
+
+ 
+
+
+
+
+
+M：定义一个MOS器件
+X：实例化一个器件
+1. LVS PUSH DEVICES SEPARATE PROPERTIES YES
+2. LVS CENTER DEVICE PINS YES
+3. MASK SVDB DIRECTORY
+4. LVS WRITE LAYOUT NETLIST
+5. LVS WRITE SOURCE NETLIST
+6. LVS WRITE INJECTED LAYOUT NETLIST
+7. LVS WRITE INJECTED SOURCE NETLIST
+8. LVS REPORT OPTION
+9. LVS REPORT MAXMUM
+10. UNIT LENGTH
+11. PRECISION
+12. SNAP OFFGRID
+13. LVS EXACT SUBTYPES YES
+14. LVS EXCUTE ERC YES
+15. LVS ABORT ON SOFTCHK NO
+16. ERC MAXMUM RESULT
+17. ERC MAXMUM VERTEX
+18. ERC KEEP EMPTY YES
+19. LAYOUT DEPTH ALL
+20. LAYOUT ERROR ON INPUT NO
+21. FLAG ACUTE YES
+22. FLAG OFFGRID YES
+23. FLAG SKEW YES
+24. FLAG NONSIMPLE POLYGON YES
+25. FLAG NONSIMPLE PATH YES
+26. VIRTUAL CONNECT REPORT YES
+27. LVS VIOLATE SHORTS YES BY LAYER CELL PRIMARY && NAME “?”
+28. LVS POWER NAME
+29. LVS GROUND NAME
+30. LVS INGORE PORTS NO
+31. LVS CHECK PORT NAMES YES
+32. LVS RECOGNIZE GATES NONE
+33. LVS INJECT LOGIC NO
+34. LVS EXPAND UNBALANCED CELLS NO
+35. LVS REDUCE DEVICE PARALLEL 合并并联的device
+LVS REDUCE DEVICE SERIES 合并串联的device
+
+17	LVS REPORT		 "./layout_top.lvs.rep"
+18	MASK RESULTS DATABASE NONE	MASK RESULTS DATABASE {NONE | {filename [NOPROBE] [NOCONTACT]	指定ICtrace掩码结果数据库的路径名以及要从该数据库排除的信息类型。不在Calibre中使用。
+		[NOLUMPED]}}
+		
+19	LVS PUSH DEVICES SEPARATE PROPERTIES YES		 SEPARATE PROPERTIES YES关键字集指示DEVICE下推以在评估候选DEVICE是否相等时忽略某些属性。结果是，只有lvs可操作的属性可以防止下推。
+20	LVS CENTER DEVICE PINS  YES	LVS CENTER DEVICE PINS {NO | YES}	为Calibre连接接口标识引脚位置坐标。
+			YES--如果可以识别居中位置，则返回引脚层和器件种子层交集的居中引脚位置坐标。
+		
+		
+		
+		
+		
+21	MASK SVDB DIRECTORY "svdb" QUERY CCI		QUERY--一个可选关键字，用于创建Calibre RVE for LVS、Calibre RVE for PERC和查询服务器(Calibre -query)完全执行所需的所有信息，查询服务器命令的Calibre Connectivity Interface (CCI)子集除外。QUERY选项创建PHDB、XDB和DV选项中描述的信息。引脚位置信息不是由QUERY关键字生成的。
+			CCI选项在Calibre nmLVS(FLATTEN/HIER)中执行电路提取期间保留Calibre连接接口(CI)产品许可。如果LVS Inject Logic未指定，那么CCI选项将导致禁用逻辑注入。要启用连接接口命令，请指定CCI选项。有关这些主题的更多信息，请参阅Calibre查询服务器手册。
+22	MASK SVDB DIRECTORY "svdb" QUERY		QUERY选项创建PHDB、XDB和DV选项中描述的信息。
+23	ERC RESULTS DATABASE "./erc.out"  ASCII		指定ERC结果路径，形式为ASCII 默认也为ASCII
+24	ERC SUMMARY REPORT   "./erc.rep" HIER	ERC SUMMARY REPORT filename [REPLACE | APPEND] [HIER]	Hier--可选关键字，指示Calibre nmlv - h在摘要报告中创建一个按layout数据库cell列出非空规则检查统计信息的部分。该关键字只在Calibre nmLVS-H中使用。
+25	LVS WRITE LAYOUT NETLIST "./layout_top.layout_flatten.spi"		指定从LAYOUT中输出转换后的网列表报告。
+26	LVS WRITE SOURCE NETLIST "./source_top.source_flatten.spi"		指定从source中输出转换后的网表报告。用于debug
+27	LVS WRITE INJECTED LAYOUT NETLIST "./layout_top.layout_injected.spi"		指定从layout中输出SPICE网络列表报告，包括注入的逻辑。仅用于
+			Calibre nmLVS-H和Calibre PERC。
+28	LVS WRITE INJECTED SOURCE NETLIST "./source_top.source_injected.spi"		指定从source中输出SPICE网络列表报告，包括注入的逻辑。仅用于
+			Calibre nmLVS-H和Calibre PERC。
+29	LVS REPORT OPTION		 A B C D G N S V
+30	LVS REPORT MAXIMUM 1000	Number|ALL	默认50
+31	UNIT LENGTH	U	单位为微米
+32	PRECISION	10000	格点精度
+33	RESOLUTION  1		定义layout网格步长(原始几何图形需要在其上对齐的数据库单元数)。必需的正整数或一对正整数，用于指定数据库单元中的布局网格(也称为用户网格)步长。指定一个值s将导致网格步长为正方形(在x和y方向上相等)。指定x y表示x是x方向的网格步长，y是y方向的网格步长。如果不在规则文件中包含此语句，则默认行为为s等于一个数据库单元。
+34	SNAP OFFGRID NO		指定原始层形状的顶点放置在由resolution或层resolution语句定义的网格上。
+			NO-脱离的不放置在格点上
+35	LVS EXACT SUBTYPES YES		指定回路比较是否在初始匹配中同时使用器件类型和子类型device type and subType
+36	LVS EXECUTE ERC YES		指定在电路提取阶段是否执行ERC操作。
+			YES--执行
+37	LVS ABORT ON SOFTCHK NO		明确在softchk时发现vialation是否要中止进程。
+			NO--不中止
+38	LVS ABORT ON SUPPLY ERROR NO		
+39	LVS ABORT ON SUPPLY ERROR YES		明确在连接性提取时发现power或ground net错误时，是否要终止进程。
+40	ERC MAXIMUM RESULTS 1000		指定ERC中单个规则检查的最大结果数。
+41	ERC MAXIMUM VERTEX 199		指定写入ERC结果数据库的任何ERC结果多边形的最大顶点数
+42	ERC KEEP EMPTY YES		指定是否将包含零结果的规则检查发送到ERC结果数据库。默认为YES
+43	LAYOUT DEPTH ALL		指定从layout数据库读取形状的hierarchy深度。
+44	LAYOUT ERROR ON INPUT NO		指定读取layout数据库时报告的某些警告是否会变成致命错误
+			NO--读取输入数据时的警告不会变成致命错误。
+45	FLAG ACUTE YES		控制是否将锐角信息输出到转录本
+46	FLAG OFFGRID YES		脱离网格标志
+47	FLAG SKEW YES		歪曲边缘是否报warning
+			YES 报warning
+48	FLAG NONSIMPLE POLYGON YES		在原始layer发现Non-simple polygon是否报warning
+49	FLAG NONSIMPLE PATH YES		控制是否将有关非简单路径的信息输出到转录本。
+			YES 报warning
+50	VIRTUAL CONNECT REPORT YES		
+51	LVS ISOLATE SHORTS YES BY LAYER CELL PRIMARY && NAME "?"		指定是否启用文本短隔离。默认为NO。
+			BY LAYER 当根据BY LAYER关键字列出结果时，包括用于hierarchy操作。
+			
+52	LVS POWER NAME POWER_NAME		
+53	LVS GROUND NAME GROUND_NAME		
+54	LVS IGNORE PORTS NO		指定LVS比较算法是否忽略端口。不用于
+			Calibre PERC。
+			NO-不忽略，考虑端口，默认为NO
+55	LVS CHECK PORT NAMES YES		是否检查匹配的端口名。不用于Calibre PERC。
+			YES-检查
+56	LVS RECOGNIZE GATES  NONE	LVS RECOGNIZE GATES {ALL | SIMPLE | NONE}	是否从晶体管级数据识别逻辑门。默认为ALL。
+		[MIX SUBTYPES] [XALSO] [WITHIN TOLERANCE]	SIMPLE--识别SIMPLE gate
+		[CELL LIST list_name]	NONE--不识别
+57	LVS INJECT LOGIC NO		是否执行逻辑注入。仅用于Calibre nmLVS-H和CalibrePERC。指定Calibre nmLVS-H是否应在设计中内部替换逻辑。逻辑注入是层次电路比较中的一种算法，其目的是通过用新的基本元素替换普通逻辑电路来减少内存消耗。
+			NO-指示Calibre nmLVS-H不替换常用逻辑元件的关键字。
+58	LVS EXPAND UNBALANCED CELLS NO		指定是否展开在source和layout中实例化不同次数的hcell。仅用于Calibre nmLVS-H。
+		处理cellA，expand cellC的所有实例。	YES-关键字，指示Calibre有选择地展开在source和layout中实例化不同次数的hcell。如果在规则文件中不包含此语句，则这是默认行为。
+		处理cell B, 此时的cell C为HCELL,其不需要expand;	NO--关键字，指示Calibre不要选择性地展开在source和layout中实例化不同次数的hcell。
+		
+		
+59	LVS Filter	LVS FILTER {{component_type [‘(’component_subtype‘)’]	筛选掉具有指定值的特性的source和layout实例instance。
+		[property [‘(’spice_parameter‘)’] [filter_constraint]]} |	Eg:   LVS FILTER c OPEN
+		{COMPONENTS component_type [‘(’component_subtype‘)’]	过滤掉所有c类型的source和layout实例。连接的net是敞开的。
+		[component_type [‘(’component_subtype‘)’]] …
+		[PROPERTY [property [‘(’spice_parameter‘)’] [filter_constraint]]]}
+		}{
+		SHORT [pin_name …] | OPEN}
+		[LAYOUT | SOURCE | LAYOUT SOURCE]
+		[DIRECT | MASK | DIRECT MASK]
+60	perimeter_coincide_outside		返回第一个PIN或LAYER上与第二个PIN或LAYER的周长重合的部分的周长，以及重合边与第一个PIN或LAYER上的形状的外部相邻的部分的总长度。
+61	trunc		取整，正数向下取整，负数向上取整
+		
+62	perimeter_inside	Usage	返回第一层在第二层内部的边的总长度。
+	device属性计算函数	PERIMeter_INside(pin_or_layer, pin_or_layer)
+		返回值：浮点数
+63	Perimeter_coincide_outside	Usage	返回第一引脚或层上与第二引脚或层的周长重合且重合边与第一引脚或层上形状的外部相邻的圆周部分的总长度。
+		PERIMeter_COincide_OUTside(pin_or_layer, pin_or_layer)
+		返回值：浮点数
+64	LAYOUT INPUT EXCEPTION SEVERITY MISSING_REFERENCE 0		DRC报空cell   跑不过用
+65	LVS PUSH DEVICES	指定是否在seed提升后将device seed多边形向下推入层次结构。	
+		此外，它还控制下推回注流的属性分离。不写默认是NO	
+66	LVS EXPAND SEED PROMOTIONS	指定是否展开在hierarchy器件识别期间受seed提升影响的cell。仅用于calibre nmLVS-H和口径PERC,默认是YES	
+67	LVS EXPAND UNBALANCED CELLS 	指定是否展开在源和布局中实例化不同次数的hcell。仅用于Calibre nmLVS-H。默认是YES	
+68	Device::enclosure_measurements	Usage	device::enclosure_measurements函数与TVF function一起使用
+		device::enclosure_measurements 	用于设备属性计算的接口，必须在TVF函数块中使用。与2008年8.3之前版本中引入的其他设备外壳函数相比，该函数具有性能优势，特别是对于由Extent操作派生的井层和具有大量顶点的井层。
+		-base layer 它定义了测量外壳的层。通常这是MOS晶体管的gate层	是CalibreDFM_DEVICE函数包的一部分。
+		-measurement layer 用于定义包含-base层的层。通常为well层。	
+		-orient layer [-connect]定义方向，通常这是源/漏层。如果使用-connect选项，则必须在-orient层上建立连接。	
+		[-max_par value]它定义从基础层边缘到封闭测量层边缘的最大面向并行的搜索距离(以用户单位为单位)。该值必须计算为一个数字。此选项覆盖此搜索距离的任何全局规范。默认值为-1.0
+		 [-max_per value] [-help | ?]一个可选参数集，它定义从基础层边缘到封闭测量层边缘的最大垂直方向搜索距离，默认为-1。
+		
+		设备属性计算语言功能。返回一个包含数字的DFM属性向量的层，这些数字与device seed shapes的边缘包围测量值相对应。输出层用作辅助层参数
+		(或派生出这样一个层)在Device语句中。
+69	Enclosure_perpendicular		
+70	Perimeter_coincide	返回第一个引脚或层上与第二个引脚或层的周长重合的圆周部分的总长度。	
+71	Perimeter_outside()	返回第一引脚或层上严格位于第二引脚或层形状外的周长部分的总长度。	
+72	Text property layer 	指定layout数据库text层，用于在DEVICE属性计算函数中的text_string()或text_numeric()	
+		通过text_string()或text_numeric()从这些层检索到的文本值可以依次分配给器件实例属性。
+73	Text_numeric	Usage	
+		TEXT_NUMeric(layer, default)	
+		layer：原始层或层集的必需名称或编号，在TEXT中指定设备操作中的属性层参数。
+		default：如果不能赋其他值，则由函数赋的必需的非负浮点值。默认值
+		返回布局中与设备种子形状相交的文本对象的数值
+74	Unit capacitance	为器件提供电容比例因子	
+			
+75	Unit_capacitance()	器件属性计算和器件标注语言功能，返回单位电容语句的值，默认单位皮法	
+			
+76			DTC与DT1 overlap，bb是DTC的总周长，
+	用dfm property 输出图形的周长到dfm.drb文件中	
+77	LVS PRESERVE BOX CELLS [YES/NO] 默认是NO	指定如何将LVS Box CELL内容写入提取的layout网络列表。仅用于nmLVS/PERC	
+		NO: 指定工具允许seed promotion在LVS box cells之外的cell。
+		任何来自box cell之外的seed promote的器件都被写入提取的网表。这是默认行为。当LVS Box BLACK或LVS Box时，此关键字不适用
+		指定GRAY。但是，它适用于指定LVS Box GRAY DEVICES的情况。
+78	LVS PRESERVE BOX PORTS [YES/NO]		
