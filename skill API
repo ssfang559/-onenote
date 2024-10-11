@@ -1,0 +1,834 @@
+
+序号	函数	用法	功能	举例
+1	infile()	infile(	打开输入端口，读文件	FILE=infile("/home/peipei/test.il")
+		S_fileName
+		)
+		=> p_inport / nil
+2	gets()	gets(	从输入端口读取一行，并将该行作为字符串存储在变量中。	gets(line FILE)  => line =  "0001 1100 1011 0111\n"
+		g_variableName
+		[ p_inputPort ]
+		)
+		=> t_string / nil
+3	outfile()	outfile(	建立输出端口，写入文件	OUTFILEPORT = outfile(hierListFile)
+		S_fileName
+		[ t_mode ]
+		[ g_openHiddenFile ]
+		)
+		=> p_outport / nil
+4	fprintf()	fprintf(	将要输出的结果写入输入端口	fprintf(OUTPORT "%s %s %s\n", instId~>cellName instId~>name paramId_w~>value）
+		p_port
+		t_formatString
+		[ g_arg1 ... ]
+		)
+		=> t
+5	close()	close(	关闭文件，释放输出端口	close(OUTPORT)
+		p_port
+		)
+		=> t
+6	cons()	cons(	在表头添加一个元素	A=list("A" "B" "C")
+		g_element		cons("D" A) => ("D" "A" "B" "C")
+		l_list
+		)
+		=> l_result
+7	append()	append( 	把list2添加在list1后，组成一个新的list	A=list("A" "B" "C")
+		l_list1 		B=list("1" "2" "3")
+		l_list2 		B=append(A B)  => ("A" "B" "C" "1" "2" "3")
+		) 
+		=> l_result 
+8	append1()	append1(	在表尾添加一个新元素	A=list("A" "B" "C")
+		l_list		append1(A "D") => ("A" "B" "C" "D")
+		g_arg
+		)
+		=> l_result
+9	car()	car(	取list中首个元素	A=list("A" "B" "C")
+		l_list		car(A)=>"A"
+		)
+		=> g_result
+10	last()	last( 	获取最后一个元素的list	A=list("1" "2")
+		l_arg 		B=last(A) =>("2")
+		 )
+		     => l_result
+11	length()	length( 	计算一个list，table,字符串等的长度	numberList=list(1 5 7 2 3 4 9)
+		laot_arg 		length(numberList)
+		 )		==>7
+		     => x_result / 0
+12	nth()	nth(	取list中的某个元素，x_index0从0开始	A=list("A" "B" "C")
+		x_index0		nth(1 A)=>"B"
+		l_list
+		)
+		=> g_result / nil
+13	nthelem()	nthelem( 	返回列表中索引值的元素（同setf_nthelem）	nthelem( 1 '(a b c) )  => a
+		x_index1 
+		l_list 
+		 )
+		     => g_result / nil
+14	remove()	remove(	从list中移除需要移除的元素	remove( "x" '("a" "b" "x" "d" "f")) 
+		g_x		==> ("a" "b" "d" "f")
+		l_arg
+		)
+		=> l_result
+		remove(
+		g_key
+		o_table
+		)
+		=> g_value
+15	reverse()	reverse(	返回所有元素颠倒的list	reverse( '(1 2 3) )   
+		l_arg		==>  (3 2 1)
+		)
+		=> l_result
+16	cdr()	cdr(	获取除首个元素剩余元素的list	A=list("A" "B" "C")
+		l_list		cdr(A)=>list("B" "C")
+		)
+		=> l_result
+17	cadr()	cadr(	先获取除首个元素剩余元素的list，再取首个元素	A=list("A" "B" "C")
+		l_list	 cadr ==> car(cdr(...))	cadr(A)=>"B"
+		)
+		=> g_result
+18	parseString()	parseString(	将字符串按照指定方式切割成一个list, 默认以空格方式分割	alList = "a/b/c/d/e"
+		S_string		parseString(alList "/")
+		[ S_breakCharacters ]		==>("a" "b" "c" "d" "e")
+		[ g_insertEmptyString ]
+		)
+		=> l_strings
+19	buildString()	buildString(	将list按照指定方式组合成一个字符串，默认以空格方式组合	listA=list("A" "B" "C")
+		l_strings		buildString(list A "/")
+		[ S_glueCharacters ]		==>"A/B/C"
+		)
+		=> t_string
+20	rexCompile()	rexCompile(	正则匹配，用于后续对rexExecute的调用使用。与rexMatchp()相比，rexCompile()和rexExecute()可以匹配多个目标	str="skill string"
+		t_pattern		rexCompile("\\(.*\\) string")
+		)		rexExecute(str)
+		=> t / nil		rexSubstitute("\\1")
+				==>skill
+21	rexExecute()	rexExecute(	根据最后一个rexCompile设置正则匹配表达式，匹配目标变量。此函数与rexCompile一起使用	str="skill string"
+		S_target		rexCompile("\\(.*\\) string")
+		)		rexExecute(str)
+		=> t / nil		rexSubstitute("\\1")=>skill
+22	rexMatchp()	rexMatchp(	判断变量与给定的正则表达式是否匹配	rexMatchp("[0-9]*[.][0-9]+" ".001")            
+		t_pattern		==> t
+		S_target
+		)
+		=> t / nil
+23	rexReplace()	rexReplace(	替换，将目标变量中与rexCompile的正则表达式匹配的字符串替换为需要的字符串。“0为全局替换”	splitName="PPRACT_OBGG2<3:0>"
+		t_source		rexCompile("<")
+		t_replacement		rexExecute(splitName)
+		x_index		rexReplace(splitName "_" 0)
+		)		==>"PPRACT_OBGG2_3:0>"
+		=> t_result
+24	rexSubstitute()	rexSubstitute(	获取rexCompile中正则匹配的标记值	str="skill string"
+		t_string		rexCompile("\\(.*\\) string")
+		)		rexExecute(str)
+		=> t_result / nil		rexSubstitute("\\1")
+				==>skill 
+				其中标记\0默认为全部字符串，\k是正则表达式中第k个匹配的字符串。
+25	stringp()	stringp( 	检查变量是否为字符串	stringp("AAA")
+		g_value 		=>t
+		 )
+		     => t / nil
+26	numberp()	numberp( 	判断数据对象是否为数字，可以是整数或是浮点数。	numberp(22)
+		g_value 		==>t
+		 )
+		     => t / nil
+27	listp()	listp( 	判断对象是否是一个list	a=list("1" "2")
+		g_value 		listp(a)
+		 )		==>t
+		     => t / nil
+28	oddp()	oddp( 	判断对象是否是一个奇整数	oddp(1)
+		g_value 		==>t
+		 )
+		     => t / nil
+29	evenp()	evenp( 	判断对象是否是一个偶整数	evenp(2)
+		g_general 		==>t
+		 )
+		     => t / nil
+30	lindex()	lindex( 	返回l_list中给定元素的索引号。	lindex('(1 2 3 4) 2)
+		l_list 		
+		g_element 		   => 2
+		[ ?all g_all ]
+		 )
+		     => x_result / l_result / nil
+31	lowerCase()	lowerCase( 	将字符串中的所有字母改为对应小写字母，并返回修改后的字符串	lowerCase("adcvfAB")=>"adcvfab"
+		S_string 
+		 )
+		     => t_result
+32	upperCase()	upperCase(	将字符串中的所有字母改为对应大写字母，并返回修改后的字符串	upperCase("adcvfAB")
+		S_string		==>"ADCVFAB"
+		)
+		=> t_result
+33	strcat()	strcat(	拼接字符串或变量	hierListFile = strcat(getWorkingDir() "/DQPOA_hierList_forceFile_20210621.txt")
+		S_string1		==>"/proj/drpoa/V0/cworkdir/peipei/DQPOA_hierList_forceFile_20210621.txt"
+		[ S_string2 ... ]
+		)
+		=> t_result
+34	sort()	sort(	按照指定的比较函数对列表进行排序;当u_comparefn为nil时，默认为按字母排序。	A=list("C" "B" "A")
+		l_data		sort(A nil)=>("A" "B" "C")
+		u_comparefn
+		)
+		=> l_result
+35	setof()	setof( 	筛选出l_valueList中满足后面表达式的元素，组成一个新的List	instIdList=setof(obj cvId~>instances obj~>purpose != "pin")
+		s_formalVar 
+		l_valueList 
+		g_predicateExpression 
+		)
+		=> l_result
+36	exists()	exists( 	筛选出满足条件的部分组成新的list, 同setof的功能	exists(shape overlappingShapes shape~>objType=="line" || shape~>objType=="path"
+		s_formalVar 
+		l_valueList 
+		g_predicateExpr 
+		)
+		=> g_result
+37	floor()	floor( 	对于给定数值向下取整	floor(3.2555)
+		n_number 		=>3
+		 )
+		     => x_integer
+38	evalstring()	evalstring(	读取并计算存储在字符串中的表达式	evalstring("1.678u")=>1.678e-06
+		t_string
+		[ s_langMode ]
+		)
+		=> g_value / nil
+39	atoi()	atoi( 	将字符串转换为整数。如果给定的字符串不表示整数，则返回nil。	atoi("123.456")  => 123
+		t_string 
+		 )
+		     => x_result / nil
+40	pcExprToString()	pcExprToString( 	将SKILL表达式转换为字符串	geGetEditCellView()
+		g_ilExpr		==>db:0x614e889a
+		 )		pcExprToString(geGetEditCellView())
+		     => t_string		==>"db:0x614e889a"
+41	makeTable()	makeTable(	建立空表	targetCell_table = makeTable("targetcell" nil)
+		S_name
+		[ g_default_value ]
+		)
+		=> o_table
+42	readTable()	readTable( 	将文件内容读到表中	readTable(netFile netMapRPT_table)
+		S_fileName 
+		o_table 
+		 )
+		     => t / nil
+43	writeTable()	writeTable( 	将表中内容写到文件中	writeTable(strcat(getWorkingDir() "/signalMapInst_table.txt") signalMapInst_table)
+		S_fileName 
+		o_table 
+		 )
+		     => t / nil
+44	apply()	apply( 	将给定的函数应用于给定的参数列表	apply('plus list(1 2 3 4))
+		slu_func 		=> 10
+		[g_arg ...]
+		l_args
+		 )
+		     => g_result
+45	lambda()	lambda( 	定义一个没有名称的函数	numberList=list(1 5 7 2 3 4 9)
+		( s_formalArgument ) 		==>(1 5 7 2 3 4 9)
+		g_expr1 ... 		sort(numberList lambda((x y) x < y))
+		 )		==>(1 2 3 4 5 7 9)
+		     => U_result
+46	loadi()	loadi(	与load相同，除了loadi忽略加载期间遇到的错误，打印错误消息，然后继续加载。	loadi(tmpFile)
+		t_fileName
+		[ t_password ]
+		)
+		=> t
+47	mapcar()	mapcar(	基于所给功能对每个list处理，返回处理后list	geGetHierMemInst()
+		u_func		= => ((db:0x1da32a4c 15)  (db:0x1da36e25 0)）
+		l_arg1		mapcar('car geGetHierMemInst())~>name
+		[ l_arg2 ... ]		==?("_AF_SPPR_BUF_0<15:0>" "I_DDINVF4_1213")
+		)
+		=> l_result
+48	member()	member(	判断目标值是否是给定list中的成员, 返回第一个元素为目标值的l_list的最大子列表	numberList=list(1 5 7 2 3 4 9)
+		g_obj		member(2 numberList)
+		g_arg		==>(2 3 4 9)
+		)
+		=> l_sublist / t / nil
+49	putprop()	putprop(	添加属性值	putprop('cxmt_MainForm 'cxmt_MainForm_Help 'hiHelpAction) 
+		sl_id
+		g_value
+		S_name
+		)
+		=> g_value
+50	geGetEditCellView()	geGetEditCellView(	获取正在编辑的cell view 的Id	geGetEditCellView(  )  
+		[ w_windowId ]		==> db:0xb612e79a
+		)
+		=> d_cellview
+51	dbOpenCellViewByType()	dbOpenCellViewByType(	打开特定的cell view，获取其cell view ID, 打开方式有三种：读（r） 写（w，有权限以覆盖方式写入，无权限写入失败) 追加（a，有权限以追加方式写入，无权限写入失败）	dbOpenCellViewByType("10G3_16GDDR5_MDIE_BT00_DLT00_R03" "AFDIGMON" "schematic" "schematic" "r")
+		{ gt_lib | nil }		==>db:0x44abc49
+		t_cellName
+		lt_viewName
+		[ t_viewTypeName
+		[ t_mode
+		[ d_contextCellView ] ] ]
+		)
+		=> d_cellView / nil
+52	dbClose()	dbClose(	关闭一个cell view	dbClose(cvId)
+		d_cellViewId
+		)
+		=> t / nil
+53	dbSave()	dbSave(	保存对以写入或附加模式打开的指定cellview所做的更改。	dbSave(cvId)
+		d_cellview	默认情况下，cellview被保存到相同的数据库ID;
+		[ d_destCellView | t_libName t_cellName t_viewName ]	但是，你可以选择指定一个不同的目标cellview ID，或者在不同的库中创建一个新的cellview。
+		)	以读模式打开的cellview只能被保存为具有不同名称的新cellview。
+		=> t / nil
+54	schCheck()	schCheck(	对指定的cellview执行检查	schCheck(cvId)
+		d_cvId
+		)
+		=> l_errors
+55	dbGetAnyInstSwitchMaster()	dbGetAnyInstSwitchMaster( 	切换到master cell instance的不同view，并打开cell view	dbGetAnyInstSwitchMaster(instId "schematic")
+		d_anyInst 		==>db:0x44abbf9a
+		t_viewList 
+		 )
+		     => d_cellView / nil
+56	cdfGetInstCDF()	cdfGetCellCDF(	获取instance的CDF ID	cdfId=cdfGetInstCDF(instId)
+		g_cellId		==>cdf:0x0x4140bca0
+		)
+		=> g_cdfDataId / nil
+57	cdfFindParamByName()	cdfFindParamByName(	依据instance CDF ID 和特定的CDF参数名获取对应的CDF具体参数ID	cdfId=cdfGetInstCDF(instId)
+		g_cdfDataId		==>cdf:0x0x4140bca0
+		t_name		 paramId_w=cdfFindParamByName(cdfId "w")
+		)
+		=> g_cdfParamId / nil
+58	dbFindAnyInstByName()	dbFindAnyInstByName( 	通过instance name找当前cell view 中的instance，输入cell view Id 和instance name,返回instance Id	dbFindAnyInstByName(cvId "CDINVF2")
+		d_cellView 		==>db:0x44ab9e21
+		t_name 
+		 )
+		     => d_inst / nil
+59	dbFindMemInstByName()	dbFindMemInstByName(	获取instance的Id,返回值为：list(instId 索引值)。	cvId = db:0x44ab999a
+		d_cellView		dbFindMemInstByName(cvId "I_GDINVF1_148")
+		t_name		==>(db:0x44ab9e21 0)
+		)		dbFindMemInstByName(cvId "I_GDINVF8_131<1>")
+		=> ( d_inst x_index ) / nil		==>(db:0x44ab9e2b 1)
+60	dbFindNetByName()	dbFindNetByName(	在指定的cellview中查找与提供的net名相同的netId	cvId = geGetEditCellView()
+		d_cellView		==>db:0x38f2aa1a
+		t_name		sigId= dbFindNetByName(cvId "MASTER0_MRS_R_10")
+		)		==>db:0x44afba1c
+		=> d_net / nil
+61	dbFindSigByName()	dbFindSigByName(	 在指定的cellView中查找与提供的信号名相同的信号ID(单bit)	cvId = geGetEditCellView()
+		d_cellView		==>db:0x38f2aa1a
+		t_name		sigId= dbFindSigByName(cvId "SL_RA_R_10<0>")
+		)		==>db:0x44af9fa3
+		=> d_sig / nil
+62	dbCreateProp()	dbCreateProp( 	为对象创建某个属性，返回该属性的ID。若该属性已经存在则返回nil。	dbCreateProp(instId "td" "string" "0.05ns")
+		g_object 		==>db:0x44ab9ab9
+		t_name 
+		t_propType 
+		g_value 
+		 )
+		     => d_prop / nil
+63	dbGetPropByName()	dbGetPropByName( 	通过名字获取instance的某个属性Id	propId = dbGetPropByName(instId "td")
+		d_object 		==>db:0x44ab9aac
+		t_name
+		 )
+		     => d_propId / nil
+64	dbProduceMemName()	dbProduceMemName(	自动拆分变量名（如，instance name, net name）,若不是总线结构，则保持不变，但返回值为list.	netName="PPRACT_OBGG2<3:0>"
+		t_name		dbProduceMemName(netName)
+		)		==>("PPRACT_OBGG2<3>" "PPRACT_OBGG2<2>" "PPRACT_OBGG2<1>" "PPRACT_OBGG2<0>")
+		=> list( <memName> ... <memName> ) / nil		netName="PPRACT_OBGG2"
+				dbProduceMemName(netName)
+				==>("PPRACT_OBGG2")
+65	geGetHierMemInst()	geGetHierMemInst(	记录从选择instance不断进入下一层直到停止之前的所有instanceId	geGetHierMemInst()
+		[ w_windowId ]		= => ((db:0x1da32a4c 15)  (db:0x1da36e25 0)）
+		)
+		=> l_list / nil
+66	geGetTopLevelCellView()	geGetTopLevelCellView(	当前显示的最上层的cell View ID	cvId = geGetTopLevelCellView()
+		[ w_windowId ]		==>db:0x38f2aa1a
+		)
+		=> d_cellview / nil
+67	geGetInstTransform()	geGetInstTransform( 	计算在电路图中instance的x和y的浮点值偏移量，symbol的旋转值和放大倍数	geGetInstTransform(instId)
+		d_InstId 		-->((7.31875 6.7125) "R0" 1.0)
+		) 
+		=> list( list( xOffset yOffset ) rotation magnification )
+68	getCurrentTime()	getCurrentTime( 	获取当前时间，返回当前时间的字符串表示形式。	getCurrentTime()
+		 )		==>"Aug 10 13:29:00 2021"
+		     => t_timeString
+69	getShellEnvVar()	getShellEnvVar(	获取已设置的UNIX环境变量值	projectName = getShellEnvVar("PROJ_NAME")
+		t_UnixShellVariableName		==>"drpoa"
+		)		versionName = getShellEnvVar("Ver")
+		=> t_value / nil		==>"V0"
+				userName = getShellEnvVar("USER")
+				==>"peipei"
+	getWorkingDir(）	getWorkingDir(	获取当前工作路径	getWorkingDir() => "/proj/drpot/TV/cworkdir/peipei"
+70		)
+		=> t_currentDir
+71	leReplaceAnyInstMaster()	leReplaceAnyInstMaster(	替换instance中libName,cellName, viewName,不需要换的填nil	leReplaceAnyInstMaster(instId nil newCell nil)
+		d_instId
+		{ t_libName | nil }
+		{ t_cellName | nil }
+		{ t_viewName | nil }
+		)
+		=>t / nil
+72	schCreateInst()	schCreateInst( 	在给定的cellView中指定位置创建instance,返回创建的instance的ID	symbolId = dbOpenCellViewByType( "TEST" "CDINVF1" "symbol" "" "r" )
+		d_cvId 		schCreateInst(cvId symbolId "I1"  0:0 "R0")
+		d_masterId 		==>db:0x44ab14aa
+		t_instanceName 
+		l_origin 
+		t_orient 
+		[ n_magnification ] 
+		 )
+		     => d_inst / nil
+73	dbCreateLine()	dbCreateLine( 	创建一个line，返回线的ID	dbCreateLine(cvId list("wire" "drawing") list(-4:2 2:2))
+		d_cellView 		==>db:0x44ab9bdb
+		txl_layerPurpose
+		l_points 
+		 )
+		     => d_line / nil
+74	schCreateWireLabel()	schCreateWireLabel( 	创建连线标签并将它们粘到指定的对象上。	schCreateWireLabel( cv wireId (0:1.875) "net1" "lowerLeft" "R0" "fixed" 0.1 nil )
+		d_cvId 
+		d_glue 
+		l_point 
+		t_text 
+		t_justify 
+		t_orient 
+		t_fontStyle 
+		n_fontHeight 
+		g_aliasP 
+		 )
+		     => d_labelId / nil
+75	hiGetCurrentWindow()	hiGetCurrentWindow(  )	获取当前window的Id	hiGetCurrentWindow()
+		     => w_windowId / nil		==>window:38
+76	geGetWindowCellView() 	geGetWindowCellView( 	获取显示在特定窗口的cellView的Id	winId = hiGetCurrentWindow()
+		[ w_windowId ] 		cvId=geGetWindowCellView(winId)
+		 )		==>db:0x44ab0f9a
+		     => d_cellview / nil
+77	dbComputeBBoxNoNLP()	dbComputeBBoxNoNLP( 	计算给定的cellView的bBox,除去所有nlp标签	cvId=geGetEditCellView()
+		d_cellViewId 		db:0x80135a9a
+		 )		dbComputeBBoxNoNLP(cvId)
+		     => l_bBox / nil		==>((0.0 0.0) 
+				    (17.0 11.0))
+78	dbFullLibPath()	dbFullLibPath(	返回特定library的完整路径	dbFullLibPath("10G3_16GDDR4_MDIE_BT02_DLT01")
+		t_libName		"/proj/dqpoa/V1/libs/10G3_16GDDR4_MDIE_BT02_DLT01"
+		)
+		=> t_fullLibPath / nil
+79	dbGetNameNumBit()	dbGetNameNumBit(	对net, terminal或者 instance 名分割获取对应的bit数	netName="PPRACT_OBGG2<3:0>"
+		t_name		   NetWidth = dbGetNameNumBit(netName)
+		)		==>4
+		=> x_numBit
+80	dbGetTrueOverlaps()	dbgetTrueOverlaps( 	返回cellView中覆盖l_bBox指定区域的指定对象(如shape、instance和mosaic)的列表，若不指定对象则为nil。获取所有的shapes，mosaics 和instances。	needUpdateWireList = dbGetTrueOverlaps(cvId_target pinbBox list("wire" "drawing"))
+		d_cellView 
+		l_bBox 
+		[ tx_layer / t / nil [ lx_level ] ] 
+		[ g_doRowCol ]
+		) 
+		=> ld_fig / nil 
+81	dbShapeQuery()	dbShapeQuery( 	对覆盖l_bBox区域的cellView,获取所有shapes	overlappingShapes=dbShapeQuery(cvId_cWL list("wire" "drawing") instTermbBox)
+		d_cellviewId
+		l_layerPurposePair
+		l_bBox
+		[ x_startLevel ] 
+		[ x_stopLevel ]
+		[ n_filterSize ] 
+		[ l_transform ] 
+		 )
+		     => l_occShapes / nil
+82	dbTransformBBox()	dbTransformBBox( 	获取对象的转换后的bBox	instTermbBox = dbTransformBBox(car(instTermId~>term~>pins~>fig~>bBox) instId~>transform)
+		l_bBox 		==>((23804.19 640.0562) 
+		l_list 		    (23804.62 640.4937))
+		 )
+		     => l_bBox_new
+83	ddDeleteObj()	ddDeleteObj(	从磁盘中删除b_objectId	ddDeleteObj(ddGetObj(libName cellName))
+		b_objectId
+		)
+		=> t / nil
+84	ddGetObj()	ddGetObj(	获取 libraries, cells, views, and files的Id	ddGetObj("10G3_16GDDR5_TV_BT00_DLT00_test")
+		{ t_libName / nil }		==>dd:0x23f21f80
+		[ t_cellName / nil ]		
+		[ t_viewName / nil ]		还可以获取cell name:
+		[ t_fileName / nil ]		
+		[ b_contextId / nil ]		
+		[ t_mode ]
+		)
+		=> b_ddId / nil
+85	geTransformUserBBox()	geTransformUserBBox( 	通过偏移量、旋转值和放大倍数获取指定的bBox（transform获取instance的bBox）	dbComputeBBoxNoNLP(instId~>master)
+		l_bbox 		==>((0.0 0.0) (92.25 59.5625))
+		l_transform 		geGetInstTransform(instId)
+		 )		==>((23860.75 549.0562) "R90" 1.0)
+		     => l_bBox_new		instbBox = geTransformUserBBox(dbComputeBBoxNoNLP(instId~>master) geGetInstTransform(instId))
+				==>((23801.19 549.0562) 
+				    (23860.75 641.3062))
+86	leClearAllMeasurement()	leClearAllMeasurement( 	删除指定cellView中的所有测量值	leClearAllMeasurement(cvId)
+		d_cellViewId ]
+		 )
+		     => t
+87	hiGetBindKey()	hiGetBindKey(	获取快捷键的skill命令	hiGetBindKey("Schematics" "None<Btn1Down>")
+		[ t_applicationType ]		==>"schSingleSelectPt()"
+		[ t_key ]
+		)
+		=> t_skill_cmd / nil
+88	hiDBoxCancel()	hiDBoxCancel( 	当在对话框中按下“取消”或“不”按钮时记录的功能。这个函数也可以直接从SKILL调用来模拟按No或Cancel。	hiDBoxCancel(vmsMsgDb)
+		g_dboxID 
+		[ g_cancelFromCancel ] 
+		 )
+		     => t / nil
+89	 hiRegTimer()	hiRegTimer( 	寄存特定时间执行的函数	hiRegTimer("hiDBoxCancel(vmsMsgDb)" 2)
+		t_callbackString
+		x_tenthsofSeconds
+		 )
+		     => t / nil
+90	hiRaiseWindow()	hiRaiseWindow( 	将一个窗口始终置于最上层	winId = hiGetCurrentWindow()
+		w_window 		hiRaiseWindow(winId)
+		[ g_silent ]
+		 )
+		     => t / nil
+91	hiZoomIn()	hiZoomIn( 	在特定窗口放大到某个点	hiZoomIn(hiGetCurrentWindow() list( 0:0 10:10 ) 
+		[ w_window ]
+		[ l_bBox ] 
+		 )
+		     => t / nil
+92	schDrawSymbolPin()	schDrawSymbolPin(	通过创建指定名称，指定方向和指定形状的terminal来创建一个symbol pin	pinFigId = schDrawSymbolPin( cvId "A" "input" list(0:0 0.0625:0 0.0625:0.0625 0:0.0625) )
+		d_cvId
+		t_termName
+		t_direction
+		l_points
+		)
+		=> t_pinFigId / nil
+93	schCreateSymbolLabel()	schCreateSymbolLabel(	在以追加模式打开的symbol中创建一个label	labelId = schCreateSymbolLabel( cv 0:1.875 "instance label" "[@instanceName]" "lowerLeft" "R0" "fixed" 0.125 "NLPLabel" )
+		d_cvId
+		l_point
+		t_labelChoice
+		t_text
+		t_justify
+		t_orient
+		t_fontStyle
+		n_fontHeight
+		t_type
+		)
+		=> d_label / nil
+94	schCreateSymbolShape()	schCreateSymbolShape(	使用给定的填充样式和给定cell view中的点列表创建指定的形状。	shapeId = schCreateSymbolShape( cv "rectangle" "outline" list(0:0 1:1) )
+		d_cvId
+		t_shape
+		t_style
+		l_points
+		[ n_width ]
+		)
+		=> d_shapeId / nil
+95	dbGetNameNumBit()	dbGetNameNumBit(	分离字符串并返回net名, terminal名或者instance名的比特数目	numBit = dbGetNameNumBit("one<0:3>")
+		t_name		==>4
+		)
+		=> x_numBit
+96	cdfParseFloatString()	cdfParseFloatString(	将字符串转换为浮点数	cdfParseFloatString("1.0u")
+		t_string		==> 1e-06
+		)
+		=> nil / d_value / t_string
+97	ceiling()	ceiling( 	返回大于给定数值的最小整数	ceiling(3.2)
+		n_number 		==>4
+		 )
+		     => x_integer
+98	abs()	abs(	返回浮点数或整数的绝对值	abs( -209.625)
+		n_number		==> 209.625
+		)
+		=> n_result
+100	difference	difference( 	返回从第一个操作数减去一个或多个操作数的结果。减运算	difference(5 4 3 2 1) 
+		n_op1 		==> -5
+		n_op2 
+		[ n_op3 ... ] 
+		 )
+		     => n_result
+101	times()	times( 	返回第一个操作数乘以一个或多个操作数的结果。乘运算	times(5 4 3 2 1)  
+		n_op1 		==> 120
+		n_op2 
+		[ n_op3 ... ] 
+		 )
+		     => n_result
+102	quotient()	quotient( 	返回第一个操作数除以一个或多个操作数的结果。除运算	quotient(-10 -2)    
+		n_op1 		==> 5
+		n_op2 
+		[ n_op3 ... ] 
+		 )
+		     => n_result
+103	dbTransformPoint()	dbTransformPoint( 	变换一个坐标对	dbTransformPoint( (1.5:2.5) list(0:10 "R90" 2.5) )
+		l_point 		=> (-6.250000 13.750000)
+		l_list 
+		 )
+		     => l_point / nil
+104	geDeleteAllProbe()	geDeleteAllProbe( 	从窗口中移除所有Probe	geDeleteAllProbe( hiGetCurrentWindow( ) )
+		[ w_windowId ] 
+		[ g_crossProbeFlag ] 
+		 )
+		     => t / nil
+105	geMakeProbeWithColor()	geMakeProbeWithColor( 	创建指定类型的Probe，可更改颜色。	geMakeProbeWithColor(?window currentSchWindowId ?object sigId ?color list("y3" "drawing"))
+		[ ?window w_windowId ]
+		[ ?name t_name ]
+		[ ?object g_object ]
+		[ ?otherObject g_otherObject ]
+		[ ?color g_color ]
+		[ ?probeType t_probeType ]
+		[ ?displayStyle t_displayStyle ] 
+		[ ?viewTypeList l_viewTypesToCrossProbe ] 
+		[ ?message t_messageString ] 
+		 )
+		     => o_probeObject
+106	hiZoomIn()	hiZoomIn( 	在指定窗口上放大到指定的bBox中	hiZoomIn(hiGetCurrentWindow( ) list(list(0 0) list(10 10)))
+		[ w_window ]
+		[ l_bBox ] 
+		 )
+		     => t / nil
+107	hiGetWindowList()	hiGetWindowList( 	返回已创建但未关闭的所有窗口的窗口id列表，包括当前未显示的窗口。	hiGetWindowList( )
+		[ s_windowType ]		=> (window:1 window:2 window:3)
+		 )
+		     => l_windowId
+108	geOpen()	geOpen( 	打开一个cell并展示在当前窗口，返回窗口Id	geOpen( ?window hiGetCurrentWindow( ) ?lib "mylib" 
+		[ ?window w_windowId ]		?cell "mycell" ?view "layout" ?viewType "maskLayout" ?mode "a" )
+		[ ?lib t_lib ]		=> window:3
+		[ ?cell t_cell ]
+		[ ?view t_view ]
+		[ ?viewType t_viewType ]
+		[ ?mode t_mode ]
+		 )
+		     => w_windowId / nil
+109	ddCreateLib()	ddCreateLib( 	根据library name 在库中搜索。	ddCreateLib( "TTL7400_series" )
+		t_libName 	如果库不存在，ddCreateLib创建相应的库
+		[ t_libPath ] 
+		 )
+		     => b_ddId
+110	techBindTechFile()	techBindTechFile( 	创建techLib和techFile属性将指定的DFII库附加到指定的技术数据库，如将TECHLIB库加到当前创建的库中	techBindTechFile(ddGetObj(libName_CP) libName_TECHLIB)
+		g_ID 
+		[ t_techLibName 
+		[ t_binaryName
+		[ updateDev ] ] ]
+		 )
+		     => t / nil
+111	leIsAnyMarkNetHighLighted()	leIsAnyMarkNetHighLighted( 	检查指定的窗口是否有标记的信号	leIsAnyMarkNetHighLighted(hiGetCurrentWindow())
+		w_windowId
+		 )
+		     => t / nil
+112	leSaveMarkNet()	leSaveMarkNet( 	当前cellview中所有高亮显示的net保存在指定的cellview (lib/cell/view)中。	leSaveMarkNet(cellName_CP ?libName libName_CP ?viewName "layout")
+		cellName
+		[ ?libName t_libName ]
+		[ ?viewName t_viewName ]
+		[ ?pt l_pt ]
+		 )
+		     => t / nil
+113	geMakeProbeWithColor()	geMakeProbeWithColor( 	创建一个指定类型的probe，同时可以指定颜色	geMakeProbeWithColor(?window winId ?object car(selectSignal))
+		[ ?window w_windowId ]
+		[ ?name t_name ]
+		[ ?object g_object ]
+		[ ?otherObject g_otherObject ]
+		[ ?color g_color ]
+		[ ?probeType t_probeType ]
+		[ ?displayStyle t_displayStyle ] 
+		[ ?viewTypeList l_viewTypesToCrossProbe ] 
+		[ ?message t_messageString ] 
+		 )
+		     => o_probeObject
+114	geEnterAddNetProbe()	geEnterAddNetProbe( 	在指定窗口上增加一个net probe	geEnterAddNetProbe( hiGetCurrentWindow() list( "y0" "drawing" ) nil t )
+		[ w_windowId ] 
+		[ l_lpp ] 
+		[ lt_probeSpec ] 
+		[ g_repeatCmd ] 
+		 )
+		     => o_probe
+115	hiGetWindowList()	hiGetWindowList( 	获取已创建但未关闭的所有窗口的窗口id列表，包括那些当前未显示的窗口	hiGetWindowList( )
+		[ s_windowType ]		-->(window:1 window:25 window:27)
+		 )
+		     => l_windowId
+116	geDeleteAllHilightSet()	geDeleteAllHilightSet( 	在指定窗口上删除所有highlight的对象	geDeleteAllHilightSet(geGetEditCellView())
+		d_cellview 
+		 )
+		     => t / nil
+117	hiSetCurrentWindow()	hiSetCurrentWindow( 	将指定的窗口设置为当前正在编辑的窗口	hiSetCurrentWindow(currentLayWindowId)
+		w_windowId 
+		 )
+		     => t / nil
+118	geGetEditRep()	geGetEditRep(	geGetEditCellView的别名。返回正在编辑的cellview的ID。	
+		[ w_windowId ]
+		)
+		=> d_cellview
+119	leCreateLayerField()	leCreateLayerField	创建用于显示具有样例的layer purpose对名称的循环字段。	
+		name	创建的组合框允许您在值列表中键入和搜索layer purpose对。
+		callback
+		appendChoices：添加layer选项列表，eg:"Any Valid Layer"
+		prependChoices：添加layer选项列表，eg:"Auto select" "Use Current Entry Layer"
+		maxVisibleItems:下拉列表的最大可视条目数
+		syncedPaletteWindow
+		techFile
+		)
+		=> layerfield
+120	geGetSelSet（）	geGetSelSet(	返回窗口或cellview中当前选定对象的列表。	geGetSelSet()
+		[ w_windowId ]		
+		[ d_cellview ]	如果没有指定，则使用当前窗口的编辑cellview。如果指定了一个窗口，则使用它的编辑cellview。	在当前窗口的编辑cellview中返回选定对象的列表。
+		)
+		=> l_selectedSet / nil
+121	geGetselSetCount	geGetSelSetCount(	返回在一个cellview中选择对象的数量，没有则返回0	
+		[ d_cellview ]
+		)
+		=> n_count / 0
+122	cdfGetBaseCellCDF	cdfGetBaseCellCDF(	返回附加到cell的基本级别CDF描述。如果没有定义，则返回nil	cdfGetBaseCellCDF(cellId)
+		g_cellId
+		)
+		=> g_cdfDataId / nil
+123	cdfDeleteCDF	ddDeleteObj(	删除对象并将其从使用中删除。根据设计管理集成，对象可能只是从项目的下一个版本中删除，但仍然保留在存储库中，或者对象可能连同其历史记录一起完全删除。	cdfDeleteCDF(cdfId)
+		ddId obj
+		);     布尔型
+124	ddGetObj	ddGetObj(	找到 libraries, cells, views, and files, and creates cells, views, and files. 最简单的用法是通过名字找到一个library:	ddGetObj( lib cell )
+		String libName,	
+		String cellName,	library = ddGetObj("libName", NULL, NULL, NULL, NULL, "r")
+		String viewName,
+		String fileName,
+		ddId contextId,
+		String mode
+		);
+125	cdfCreateBaseCellCDF	cdfCreateBaseCellCDF(	为cell创建基本级别的CDF描述。CDF描述是在没有参数或仿真模型的情况下创建的。	cdfCreateBaseCellCDF(cellId)
+		g_cellId
+		[ ?doneProc t_doneProc ]
+		[ ?formInitProc t_formInitProc ]
+		[ ?fieldWidth x_fieldWidth ]
+		[ ?fieldHeight x_fieldHeight ]
+		[ ?buttonFieldWidth x_buttonFieldWidth ]
+		[ ?promptWidth x_promptWidth ]
+		)
+		=> g_cdfDataId / nil
+126	cdfCreateParam	cdfCreateParam(	在指定的g_cdfDataId上创建具有指定属性的参数。惟一需要的属性是参数的名称和类型。如果此参数描述没有覆盖现有的基本级参数定义，则还必须指定默认值。	cdfCreateParam( cdfId
+		g_cdfDataId	注意：	    ?name "1"
+		[ ?name t_name ] 名称	不能重写参数的类型。此外，CDF检查有效参数是否一致且有效，尽管有任何重写。	    ?prompt "1"
+		[ ?type t_type ]类型		    ?defValue "0.1"
+		[ ?defValue g_defValue ]参数的默认值	如果参数名称在CDF描述中已经存在，则不会更新CDF描述。	    ?type "float"
+		[ ?units t_units ]单位		  );cdfCreateParam
+		[ ?parseAsNumber t_parseAsNumber ]		
+		[ ?choices l_choices ]		
+		[ ?prompt t_prompt ]显示在Add Instance或Edit Object Properties表单上的CDF参数的名称。		
+		[ ?use t_use ]		
+		[ ?display t_display ]		
+		[ ?editable t_editable]		
+		[ ?dontSave t_dontSave]		
+		[ ?callback t_callback]		
+		[ ?storeDefault t_storeDefault ]		
+		[ ?parseAsCEL t_parseAsCEL ]		
+		[ ?description t_description ]		
+		)		
+		=> g_cdfDataId / nil
+127	cdfSaveCDF	cdfSaveCDF(	将一个CDF描述保存到磁盘	cdfSaveCDF( cdfId )
+		g_cdfDataId
+		)
+		=> t / nil
+128	techGetTechFile	techGetTechFile(	返回附加到指定DFII库的技术数据库的标识符。	techGetTechFile( libID )
+		{ g_libID }	返回的是技术库的ID/nil	=> techFileID
+		)		输入：libID
+		=> d_techID / nil		输出：技术库ID
+129	techGetSpacingRule	techGetSpacingRule(	返回指定技术数据库中(a)位于代工约束组中的约束的值，(b)是在一个空格分段中具有指定名称的第一个硬约束，并且(c)应用于指定的层或层。	techGetSpacingRule(tfID "minSameNetSpacing" "Metal1")
+		d_techID 技术库ID	即返回满足技术库中给定层约束条件的值。	=> 0.12
+		t_constraint 约束条件		返回为tfID标识的技术数据库铸造约束组中的metal1层定义的minSameNetSpacing间距约束的值。
+		tx_layer1 层		
+		[ tx_layer2 ]		
+		)
+		=> g_value / nil
+130	dbCreateRect	dbCreateRect(	创建一个矩形	dbCreateRect(cv list(87 "pin") list(0:0 6.3:8.7))
+		d_cellView
+		txl_layerPurpose（Name, number, or a list of layer or layer-purpose pair.）
+		l_bBox 定义边界框的左下角和右上角。
+		)
+		=> d_rect / nil
+131	leGlobalViarables	外部方法， 获取所打开的layout的process，project等信息		
+132	geGetEditCellView()	获取所打开layout的cellview id		
+133	mgc_custom_menus_run_menu_cmd("RVE" "::CalibreInterface::execCalibre RVE" 'nil ?code "")	自动打开rve命令		
+134	ansCdlPrintConnections	ansCdlPrintConnections(	定制化如何将连接到device的nets写入cdl 网表，无返回值。	
+		&_fp	&_fp  ：文件句柄，用于使用artFprintf SKILL函数在网络列表中写入字符串。
+		l_connections	l_connections：instance terminal对和连接到终端的nets的列表。
+		)
+		
+135	dbInstQuery()	dbInstQuery(	返回cellview中边界框与l_bBox指定的区域重叠的所有实例的列表。	
+		d_cellviewId	对象的查询基于开放的层次结构级别。只有当前打开的cellview才会被搜索。为了确保在查询列表中返回所有形状，dbOpenHier可以用来加载所有需要的cellview。
+		l_bBox
+		[ x_startLevel ]
+		[ x_stopLevel ]
+		[ n_filterSize ]
+		[ l_transform ]
+		)
+		=> ld_inst / nil
+136	sprintf	sprintf(	格式化输出并将结果字符串赋值给作为第一个参数给出的变量。	Eg:  sprintf(label1 "%s(%s)" ESDModel model)
+格式化输出ESDModel model的值，并输出的结果赋给label1变量
+		{s_Var | nil }
+		t_formatString
+		[ g_arg1 ... ]
+		)
+		=> t_string
+137	parseString	parseString(	将一个字符串变成一个子字符串组成的列表，如果未指定字符，默认空格做分割，	
+		S_string		
+		[ S_breakCharacters ]
+		[ g_insertEmptyString ]
+		)
+		=> l_strings
+138	ciToFloat	ciToFloat(	把字符串转换成浮点型	
+		g_value		
+
+		)
+		=> f_result
+139	substring	substring(	从输入字符串创建一个新的字符串，给定起始索引点（不能是0）和长度	
+		S_string	索引为负数则从最后开始找，	
+		x_index	长度没给，则从索引点开始到最后被返回
+		[ x_length ]	如果给定字符串是symbol，则返回他的print name
+		)
+		=> t_result / nil
+140	boundp	boundp(	检查由符号命名的变量是否被绑定，即是否被赋值。boundp的单参数形式仅在SKILL模式下有效。请记住，可以将变量设置为特殊符号unbound。	
+
+		s_arg
+		[ e_environment ]
+		)
+		=> t / nil
+141	ciToFloat	ciToFloat(	为传递的值返回一个浮点数。如果值是字符串，则对其求值并返回结果。	
+		g_value		
+		)		
+		=> f_result
+142	makeTable	makeTable(	创建一个空的关联表	
+		S_name		
+		[ g_default_value ]
+		)
+		=> o_table
+143	dbCreateLabel	dbCreateLabel(	创建一个文本label	dbCreateLabel(cv 4 1:1 "myLabel" "centerLeft" "R0" "roman" 2)
+在cv中创建一个指定的层4，purpose drawing，原始点1：1，文本“myLabel”,位置centerLeft，角度R0，字体roman，高2。
+		d_cellView
+		txl_layerPurpose
+		l_point
+		t_label
+		t_just
+		t_orient
+		t_font
+		x_height
+		)
+		=> d_label / nil
+		
+144	hiCurrentForm	hiGetCurrentForm( )	返回上一个动作，也就是光标最后所在的形式。	
+		=> r_form
+145	hiCreateAppForm	hiCreateAppForm(	?callback 用于指定当你选择apply,OK或者Cancel,quit的时候执行的	
+		?name s_name	skill 函数（callbacks）。
+		?fields l_fieldEntries	g_callback有两种形式，g_okAction指定在表单中按下Apply、OK、Close或Quit按钮时执行的SKILL函数;g_cancelAction指定Cancel按钮被按下时执行的SKILL函数。(这里，如果g_cancelAction没有指定，当表单被取消时，不会调用回调函数。)
+		[ ?attachmentList l_fieldAttachments ]
+		[ ?tabOrderIsAddOrder g_tabOrderIsAddOrder ]
+		[ ?formTitle t_formTitle ]
+		[ ?callback g_callback ]
+		[ ?unmapAfterCB g_unmapAfterCB ]
+		[ ?mapCB g_mapCallback ]
+		[ ?formType s_formType ]
+		[ ?dialogStyle s_dialogStyle ]
+		[ ?buttonLayout g_buttonLayout ]
+		[ ?buttonDisabled s_buttonDisabled ]
+		[ ?help g_help ]
+		[ ?initialSize g_initialSize ]
+		[ ?minSize g_minSize ]
+		[ ?maxSize g_maxSize ]
+		[ ?dontBlock g_dontBlock ]
+		[ ?fieldFocus s_fieldFocus ]
+		[ ?plist g_plist ]
+		[ ?baseName s_baseName ]
+		)
+		=> r_form
+144	assoc	assv(	返回列表第一项符合g_key的键值对	
+		g_key
+		l_alist
+		)
+		=> l_association / nil
+145	eq		assq使用eq, eq检查地址是否相等，用于比较symbol	
+146	equal	equal(	检查数字、字符串、列表的内容是否相等使用equal， assoc使用equal，相当于==	
+		g_arg1
+		g_arg2
+		)
+		=> t / nil
+147	eqv	eqv(	用于比两个字符串和数字（数字只能比整数，不能比小数），不能比列表	
+		g_general1		
+		g_general2
+		)
+		=> t / nil
+148	deDeleteObject	dbDeleteObject(	删除以下对象 shapes, nets, terminals, instance terminals, pins, instance pins, mosaics, instances, mosaic instances, properties, groups, and group members. 	
+		d_object
+		)
+		=> t / nil
+149	geGetEditRep	geGetEditRep(	返回被编辑的cell view ID	geGetEditRep()
+		[ w_windowId ]
+		)
+		=> d_cellview
+150	leSearchHierarchy			
+
+
