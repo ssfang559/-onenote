@@ -1,0 +1,229 @@
+voltage rule check and net type check 
+
+1.有failed ，在之前的版本加上相应的waived cells。再run之后的版本。
+如何在wesign上传：如果结果pass，选pass，comment写（Compare to V1 version, all violations can be waived.）;如果有violations的话，把错误的上传，并列出list。
+
+manual学习-第三章 calibre perc topology rule checks（这一章是net type传播检查的例子）
+         Calibre PERC功能的核心是可以编写的拓扑规则检查。Calibre PERC提供了两种主要方法来标记网络作为执行拓扑检查的前兆:net type propagation网络类型(包括路径类型)传播和voltage propagation电压传播。这两种方法都通过沿着定义良好的路径在整个hierarchy结构中标记网络，以某种有意义的方式对网络进行分类。
+	电压传播更灵活，但是运行速度比网络类型传播更慢，仅仅在提供性能优势的条件下使用。
+ calibre perc rule checks 程序有两部分：Initialization and Rule Check Procedures
+
+1. Initialization and Rule Check Procedures*（详见第十六章）
+Definitions:
+Net：连接device pin 或者 port
+Net type：perc::define_net_type, perc::define_net_type_by_device, perc::define_net_type_by_placement, perc::define_type_set在这几个指定的命令中net type才有连接性，通过hierarchy直接连接，而不通过引脚pin
+Path: 一系列连接的nets,device pins,ports .一个path至少包含一个net
+Path type: perc::create_lvs_path, perc::create_net_path
+ 
+Rule_check_procedures:
+包含两种主要的命令：perc::check_device  perc::check_net
+perc::check_device:用于检查单个device的状态，比如property、net、path type
+perc::check_net：用于检查单个net的状态，比如net、path type
+对于检查多个device，可以使用以下命令在-condition proc代码块中遍历网表：
+    perc::exists  判断device的数量是否达到限制
+    perc::count  找到连接到同一net的device数量 以及device列表
+    perc::equal  判断两个net是否连接在一起
+    perc::get_nets  找到通过一个确定的pin连接到一个device的net
+    perc::get_other_net_on_instance  从一个device的一个net跳到另一个
+    perc::get_instances_in_series 找到一系列连接的device
+ 
+2.Hierarchy Traversal by Rule Check Commands:
+perc是自下而上的访问hierachy中的cell。
+3. Device Types, Pin Names, and Logic Structures
+ 
+
+ 
+4. example：diode protection of MOS Gates：检查mos gate端有没有二极管保护。先定义再检查
+ 
+
+
+
+
+
+5.初始化命令
+perc::define_voltage_interval -interval {value | none}指定最小电压值精度。
+perc::create_voltage_path -type { } -pin { }
+perc::create_net_path -type { } -pin { } { }
+ 
+6.tcl包
+ 
+
+
+
+
+创建代码
+创建包INDEX
+添加目录到AUTOPATH：使用lappend命令来添加程序包到全局列表，
+	lappend auto_path “路径”
+添加软件包：使用程序包要求声明如下，
+    package require common_utils
+    package require perc_utils
+
+7.初始化程序:初始化过程是可选的，出现在TVF函数块中。初始化过程使用PERC Load…INIT关键字调用，并为PERC Load语句中指定的规则检查设置网络类型、路径类型、电压和传播条件。它还可以设置运行时环境的各个方面。
+ 
+
+
+1)定义阈值电压和电阻值：global 变量
+    global vth rth mosdiode_th
+    set vth 0.05
+2)定义net types：
+    perc::define_net_type Power {lvsPower}
+    perc::define_net_type Ground {lvsGround}
+    perc::define_type_set Supply {Power||Ground}   （从网络类型列表中创建并分配一个新的网络类型集合。）
+以下例子，先定义net type, define_type_set是从已知的网络类型列表创建并分配一个新的网络类型集合。
+
+ 
+
+
+3)定义最小精度电压值：
+ 
+
+
+4)创建电压通过电阻的传播路径，并处理潜在的再同一个net上的多个电压的情况:（有哪些device可能出现这种情况？R, MP, MN）
+ 
+
+
+	perc::create_voltage_path -type{R} -pin {p n} -break {supply || UserNetType}  通过选择的device和pin进行电压传播
+	perc::ceratevoltage_path -type{MP} -pin {s d}
+5)创建电压通过已知的首个subcircuits（topcell？）的传播路径, 底层的subcircuit：
+ 
+
+
+	意思是这些device（v_ac,switch_close）通过底层cell传播电压的？
+6）创建一致的net path用于debug和tracing：
+     
+
+    给这些所有前面出现的device（R,v_ac,switch_close,MP,MN）创建一致的net path传播路径。
+
+9. perc::name 
+	Calibre PERC数据访问命令。
+    返回迭代器参数所指向的元素名称。
+ 
+10. perc::get_properties
+Usage
+perc::get_properties instance_iterator [-name property_name]
+创建一个属性迭代器。
+如果未指定选项名，则迭代器指向被引用实例的属性列表的第一个条目。属性迭代器从传入参数继承其上下文。
+创建的迭代器可以向前推进(perc::inc)以访问实例的所有属性，包括字符串属性。属性列表的顺序既无意义也不可预测。
+
+11.perc::voltage_max     calibre perc数据访问命令
+perc::voltage_max instance_iterator pin_name
+返回由instance_iterator提供的实例的给定pin_name上的最大电压。如果pin_name上没有定义电压，则返回一个空列表。
+
+12.perc::report_base_result   calibre PERC 高级命令
+将用户定义的内容写入报表文件。此命令必须在其他高级命令的上下文中调用。
+Usage
+perc::report_base_result
+[-title title_string]  ：title_string为输出的第一行
+[-value value_string]  ：当-title使用时，value_string输出为第二行；没使用时输出为第一行。
+[-list iterator_list [-collapseList property_list]]  ：可选参数集，其中iterator_list必须是迭代器的Tcl列表，例如: -list [$itr1 $itr2]
+[[-property key_value_list] …]  ：
+该命令只能在高级命令“perc::check”的上下文中调用。该命令可以在规则检查中调用任意次数，包括-condition procs。根据规则检查调用上下文，数据被写入以下位置:
+    perc:check_net
+    perc::check_device
+    perc::check_device_and_net
+    perc::check_data
+当使用-list选项时，Calibre PERC会为可用于Calibre RVE交叉探测的网络迭代器和实例迭代器添加额外信息。
+
+14.PERC检查内容
+P2P和CD用于ESD检查
+指的是用户可以根据自己的design客制化编写一些ERC的rule来进行检查，一般都是会检查ESD相关的rule。比如说PERC有current density检查，就是检查某一条专门用来ESD放电路径上current承载能力的；还有point to point resistance检查，是为了检查ESD放电路径的电阻，需要保证它的电阻小于其他路径的电阻，确保静电电流走预设好的放电路径。PERC还支持layout的检查和schematic的检查，用户就自己设定检查规则，也很方便。
+ 
+
+
+In the category of netlist checks, this can include: 
+	EOS (electrical overstress)
+	Floating gate
+	Level shifter placement
+	Fanout
+	Leakage
+	Netlist statistical analysis
+
+13.perc::define_net_type_by_device
+分配一个网络类型给连接到选定器件的网络。
+Usage
+perc::define_net_type_by_device net_type
+[-type type_list]   如{MN MP} or {! MN MP} !表示除了这种器件之外的器件类型
+[-subtype subtype_list] 
+[-property “constraint_str”] 一个可选参数集，其中constraint_str必须是一个非空字符串(用双引号括起来)，指定属性名，后跟限制属性值的约束。约束符号在SVRF手册的约束表中给出。只选择满足constraint_str中的条件的设备。
+[-pinNetType {{pin_name_list} {net_type_condition_list}…}] 可选参数集，用于定义设备必须满足的条件，以便对网络类型进行分类。检查指定的引脚，以确定它们是否具有指定的网络类型。pin_name_list是一个由一个或多个引脚名称组成的Tcl列表。必须指定至少一个pin_name_list和对应的net_type_condition_list。如果-type指定了. subckt名称，则pin_name_list中的引脚名称来自于. subckt定义。
+[-condition cond_proc [-conditionNetType net_type_condition_list]] 如果器件满足条件，cond_proc必须返回值1，否则返回值0。返回值为1，表示选择该器件进行处理。
+[-pin pin_name_list] 如果使用-pin选项，Calibre PERC只将net_type分配给连接到所选器件的所列引脚的网络。
+[-cell | -cellName cell_name_list] 一个选项，用于控制任意cell中网络类型的赋值。如果指定了-cell, Calibre PERC将net_type分配给连接到选定器件的所有cell中的net,即分配给下级的cell。将网络类型分配给仅通过单元端口连接到指定网络并贯穿整个层次结构的网络。
+[-conditionNetType net_type_condition_list] 由-condition选项指定的可选参数集，用于定义cond_proc中用于赋值的网络类型。如果不指定-conditionNetType参数，则使用所有的网络类型。如果指定了该选项，那么cond_proc中引用的net类型必须在net_type_condition_list中引用。net_type_condition_list可以为空，在这种情况下不使用任何网络类型，也可以与-pinNetType选项中的形式相同。在后一种情况下，与-pinNetType中讨论的相同的语义适用于列表。您可能希望使用的唯一操作符是逻辑与(&&)，因为您希望引用cond_proc的所有网络类型。
+接收net网络类型的网络会自动接收同名的path路径类型。路径类型符合传播条件。
+默认情况下，Calibre PERC将net_type分配给名称与net_name_list设置匹配的顶部单元格中的nets。然后，Calibre PERC将net_type沿着层次结构分配给通过单元端口直接连接到顶级网络的任何网络。
+
+15 .创建电压路径
+perc::create_voltage_path -type{R} -pin {p n} -break {supply || UserNetType}  通过选择的device和pin进行电压传播
+	-type type_list                    device的类型       Examples of type_list are these: {MN MP} or {! MN MP}
+	-subtype subtype_list                 device的subtype
+	-property “constraint_str”        限制属性               eg:-property "R > 100"
+	-on “pin_name{+/-} constraint”   指定使用矢量模式计算并控制电压是否通过选定的device引脚
+	-pinNetType {{pin_name_list} {net_type_condition_list} …}   指定的pin要有指定的nettype
+	-pin                                       指定pin         
+	-pinVoltage voltage_proc   
+	-condition cond_proc
+	-break net_type_condition_list        明确停止电压传播的net type
+没有返回值
+
+第四章-calibre perc voltage rule check   （是第二种检查方式  电压传播方式）
+
+电压检查能力是用于一个完整设计的静态电压验证。电压检查功能需要向网络分配数字标签(也支持逻辑标签，但它们具有底层数值)。然后，这些电压标签可以沿着满足良好定义条件的拓扑路径在整个设计中传播。数值标签隐式地有一个顺序，这是网络和路径类型标签通常不支持的。这便于在适当的检查中使用数学表达式对电压值进行排序和测试。
+应用：
+可能导致硬件故障的高压环境
+反向电流的情况
+gate和节点floating
+不同power域交叉时的电压冲突。
+栅极氧化物的最大电压。
+正偏MOS pn结
+高级ERC问题。
+电压路径是参与电压传播的拓扑连接对象的集合。默认情况下，该工具假定没有电压路径，除了平凡的电压路径，这些电压路径由终止于设备引脚或顶级端口的单个网络组成。通过指定电压传播的设备，可以扩展普通电压路径。这类似于网络类型和路径类型的处理方式。
+       给定用户定义的传播准则和网络上的初始电压，Calibre PERC沿电压路径传播电压。然后可以执行测试，以确定电路是否可以根据传播的值正常工作。由于只涉及电压，分析速度很快，但不期望传播的电压值与动态模拟相同。
+      默认情况下，电压传播路径中的所有器件都被认为是理想的，它们之间没有电压降。可以在Calibre PERC中指定设备的电压降。然而，由于没有使用环路和节点方程，传播的电压值可能表示物理上不可能的情况。用户有责任检测和减轻这种情况。
+
+电压检查设置流程如下:
+1. 确定感兴趣的端口网络名称和相应的电压。
+2. 定义电压传播准则。有关一些重要的注意事项，请参阅“有矢量与无矢量电压分析”。
+3.根据步骤1和步骤2编写初始化过程的代码。perc::create_voltage_path命令用于启动沿电压路径的电压传播。使用电压路径是可选的。如果不使用，则分配的净电压不会传播。必须使用perc::define_net_voltage或perc::define_net_voltage_by_placement命令为设计定义电压。参见“电网电压分配”。
+4. 确定电压检查所需的device和net。
+5. 代码calibre PERC电压检查基于步骤3和4。
+这本质上与用于编码任何Calibre PERC拓扑检查的流程相同。
+电压沿拓扑路径在器件终端上迭代传播。随着迭代计算的进行，电压分配会填充越来越多的节点，直到最后所有节点(可达)都有一个确定的电压。
+电压传播控制：依赖于电压到达的顺序
+电压分配到nets：定义电压路径  perc::cerate_voltage_path 
+			分配电压          perc::define_net_voltage 将初始电压分配到顶级网络
+						perc:define_net_voltage_with -cell option 
+						perc::define_net_voltage_by_placement
+						perc::define_net_voltage with -cellName option
+向量模式：在某个时刻应用某一个指定的输入电压值的情况下分析
+非向量模式：器件恰好是开的状态
+非向量模式：可以有多个电压值在初始化时，perc::cerate_voltage_path在不使用-on选项的时候使用
+Example 没看！！
+
+	16. Perc::count
+	-list    一个可选参数，使命令返回一个列表列表，其中满足命令条件的实例的计数作为第一个元素，实例迭代器列表作为第二个元素。此选项不能通过-listPin或-collection指定。每个返回的实例迭代器都引用一个实例，并且不能向前步进。列表中返回的最大实例数是4E5。这可以通过perc::set_parameters命令来减少。使用-collection可以处理更大数量的实例。即指定-list时，返回的一个列表，列表的第一个元素是数量，列表的第二个元素是符合的实例列表。
+
+17.perc report 相关
+
+g: pin;
+VSS: net
+[Ground] : net type
+[Power Ground]: 传播的net type
+如果是电压检查，继续在后面添加方括号, 内容是传播前后的电压值集合。
+
+
+
+18.两种检查体系
+Pattern based check
+	PERC PATTERN PATH pattern.sp	载入已有的pattern
+	Perc::get_one_pattern -patternType subcktName -patternNode []	创建一个pattern迭代器
+Device/cell based check
+	
+
+19.在check_device时只有-path时才可以查到顶层之下的，不加指查到顶层的，-path指定传播的路径并获得相应的属性。
+
+
+
+	17. 第十二章 P2P 点到点电阻检查(layout netlist)
+
