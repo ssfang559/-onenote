@@ -1,0 +1,108 @@
+文件三剑客 sed awk grep
+sed用法
+1、sed = stream edit 流式编辑器  
+#1、什么是sed：文件一行一行的读取，像流水线一样。
+#sed与vim的区别
+    1、sed可以把处理文件的规则事先写好，然后用同一套规则编辑多个文件（做集群的时候部署文件有用）==用一套规则处理多个文件
+       而vim只能一个个编辑    
+    2、sed处理文件一次只处理一行，同一时间只处理文件的一行，无论文件多大，都不会对内存造成过大的压力==用于处理大文件
+     vim是将硬盘中的文件一次读入内存，会比较卡。
+        sed进程的内存空间
+        模式空间 pattern space+ 保持空间
+#2、#用法（命令+选项+参数）    
+    sed  选项 规则'定位+命令'  文件路径
+    #选项
+        -n取消默认输出  
+        -r 支持正则元字符（由于正则未学习，此处暂作了解）
+        -i 改变了输出流向，会直接对源文件进行修改。#注意只针对文件可以修改
+        （原理：先将改的结果先放到临时文件中，然后将原文件删除，再将临时文件名改成原文件名）
+    #行定位 规则 (默认所有行 vim就是需要加%) 
+        d默认删除所有行
+        p打印所有的行
+        1定位到第一行
+        1,3代表定位到1-3行
+        不写定位代表定位所有行
+    #正则表达式定位 规则
+        /egon/包含egon的行
+        /^egon/以egon开头的行
+        /egon$/以egon结尾的行
+    #数字+正则表达式定位
+        "1,8p"代表打印1-8行
+        "1,/egon/p"则代表从第1行到首次匹配到/egon/的行
+    #替换命令s （substitute）用法sed "定位s///" 文件 
+        sed "1,3s/egon/EGON/" 文件 #文件中的第1-3行的变成大写的EGON
+        ifconfig | sed "s/ens33/entho/" 天然支持管道命令
+
+#3、
+（1）行定位
+    sed "p" a.txt    所有行都会打印2次
+    sed -n "p" a.txt 先print一行，又默认输出一行
+    sed "3p;5p" a.txt 只要第三第五行会输出两次
+    sed -i "p" a.txt 不会在屏幕中显示，会直接在a.txt中修改保存。
+    sed "d" a,txt 会删除文件
+（2）正则定位
+    sed "/egon$/d" a.txt 删除以egon结尾的删除
+    sed "/^egon/p" a.txt
+
+AWK用法
+1、主要擅长处理有规律的文本，主要用于做一些格式化处理，从硬盘读到内存再显示在屏幕
+ awk 选项‘规则’文件路径 awk可以定位到一整行的哪一段#awk本身就是一个编程语言。
+#选项：
+    -F :指定分隔符   #注意awk一定要使用单引号 -F 后面需要是空格
+ fp:ls /etc/passwd 里面每一行都是以冒号分隔开的内容
+
+ 规则：定位+命令 Number of Record   Number of Fileds
+#定位 没有定位代表定位所有行
+    行号定位：NR（内置变量） == 1   NF(内置变量) 
+    awk -F: '{print NF}' /etc/passwd #结果输出每一行的段数
+    awk -F: '{print ($NF-1)}' /etc/passwd #取每一行每一段最后几个段的数据
+
+    正则定位：awk -F: "/正则表达式/{print $1,$3}"文件路径   
+#命令:{print $n} n代表的是打印第n段内容   $0代表打印整行 
+  Example：(&&且 ||或)
+#行号定位：
+    fp: awk -F:'{print $1,$3}' /etc/passwd 打印所有数据中第一段及第三段数据
+    fp: awk -F: 'NR==3{print $1,$3}' /etc/passwd 打印第三行数据第一和第三段数据
+    fp: awk -F: 'NR>=3 && NR<=5{print $1,$3}' /etc/passwd
+        awk -F: 'NR==3,NR==5{print $1,$3}' /etc/passwd
+
+#正则定位：
+    fp: awk -F: '/nologins/{print $1}' /etc/passwd
+    fp: awk -F: '$6 == /root/{print $0}' /etc/passwd #打印每一行第六段是/root/的成行数据           fp：awk -F '$1 == "root"{print $0}' /etc/passwd #外层是单引号内层需用双引号
+    awk -F 'NR>=1 && NR<=3 && $1 == "root" {print $0}' /etc/passwd   #综合性应用
+    #特殊情况：当a.txt文件内容是有很多空格时
+    awk -F "" '{print $1,$2}' a.txt #不管空格的个数 只查看第一二列的数据
+
+    awk  '{print $1,$2}' #默认分隔符就是空格 显示空格后的数据，相当于去行首的空格。
+
+#应用第一块网卡的ip地址指定出来
+    fp:ifconfig ens33 | awk 'NR==2{print $2}'
+
+
+GREP用法
+1、擅长过滤 
+   语法grep 选项 "过滤规则" 文件
+    grep -n "root" /etc/passwd  #过滤带行号并且会高亮显示number，查找带root的一行，并显示带行号的全行
+    grep -ni "egon" a.txt #过滤不区分大小写 ignorecase(ic)
+    grep -l "egon" a.txt #如果文件中存在egon过滤成功返回文件名，反之不反馈
+    grep -rl "egon" /etc/ #主要应用于递归查询（常用）
+ #正则规则 ^ $
+     grep -n "bath$" /etc/passwd  
+ #管道应用
+     ifconfig ens33 | grep 'netmask' 
+ #查看操作系统上运行的所有的进程ps（process）
+     ps aux #查看所有的进程信息  auxiliary辅助 pid相当于身份证号
+     默F示出来
+     ps aux | grep "ssh" 过滤所有ssh服务的进程 
+     输出结果：包含grep --color=auto ssh这个是一个命令产生的，不属于ssh
+     方法一: ps aux | grep 'ssh' | grep -v 'grep' #-v过滤掉
+     方法二: ps aux | grep '[s]sh' 
+#linux系统如何查询及关闭进程
+     ps aux | '[v]im'
+     kill -9 9825 #9825指pid号
+#windows系统中查看及关闭进程
+     1、ctrl+alt+delete  直接可以在里面结束进程
+     2、cmd以管理员登录：输入tasklist
+        tasklist | findstr 'mspaint'
+        taskkill /F /PID 1080
+
