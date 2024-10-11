@@ -1,0 +1,142 @@
+17.tcl 函数
+Subst: 完成反斜杠、命令和变量的替换
+
+1．Tvf命令语法：tvf : : <command_name> <arguments>
+例：
+    tvf::DRC SELECT CHECK size_rule
+	tvf::SETLAYER gate = "poly AND diff"
+	tvf::// {This is one type of compile-time comment.}
+	 
+２.rule check, 衍生层以及结果输出代码如下：
+    tvf::RULECHECK my_rule {
+	tvf::SETLAYER layer1 = {layer2 OR layer3}
+	tvf::OUTLAYER {layer4 NOT layer1}
+	}
+ 
+３.开始行：#!tvf
+ 
+４.标准tcl结构：循环、状态声明、列表、变量、tcl注释
+ 
+５.tvf::VERBATIM
+ 
+６.注释：
+    tvf:://
+	tvf::@
+	tvf::COMMENT
+ 
+７.层定义
+tvf::SETLAYER 
+Syntax 1: Layer derivation, compile-time and runtime，返回衍生层名
+	tvf::SETLAYER layer_name = arguments
+Syntax 2: Get layer names, compile-time only，返回global/local层列表
+	tvf::SETLAYER -getnames {-global | -local}
+Syntax 3: Get layer expression, compile-time only，返回层表达式
+	tvf::SETLAYER layer_name -getexpr
+eg:
+	tvf::SETLAYER gate = poly AND diff
+	tvf::SETLAYER lout = ((L1 AND L2) OR "($L3 AND $L4)") AND {(L5 OR L6)}
+双引号(" ")允许在参数列表中进行变量替换，而大括号({})将它们的内容作为不带变量替换的列表传递。
+ 
+8.rule checks
+tvf::RULECHECK
+ 
+9.全局变量
+tvf::exists_global_variable
+tvf::get_global_variable
+tvf::set_global_variable
+tvf::unset_global_variable
+ 
+10.命令行, 您可以获得用户定义的命令行参数和Calibre调用行参数。
+tvf::get_tvf_arg
+calibre_argc, calibre_argv, and calibre_argv0
+ 
+11.错误报告命令
+tvf::set_traceback_line
+ 
+12.脚本控制命令行：
+tvf::echo_svrf
+tvf::block_transcript
+tvf::is_transcript_blocked
+tvf::unblock_transcript
+ 
+13.形成输出SVRF文件
+tvf::echo_to_svrf_file
+tvf::set_rule_check_indentation
+tvf::set_disclaimer
+ 
+14.获取calibre版本
+tvf::get_calibre_version
+ 
+15. 
+
+
+
+	1）All commands have lowercase versions except SOURCE, TRACE,
+VARIABLE, and UNIT。这几个没有小写，除了这几个，其他可以小写。
+	2）expand edge和expand text layer操作不包括
+	3) The Flatten layer operation is not mapped.
+	4) litho设置文件不使用TVF
+	5）PEX Inductance statements are not included.
+	6）The Push layer operation is not included.
+	7 ）The Snap layer operation is not included.
+ 
+
+
+
+
+
+
+
+
+ 
+16.将生成的SVRF代码保存为svrf_from_tvf_drc_rules文件。
+calibre -E svrf_from_tvf_drc_rules tvf_drc_rules
+
+17.tcl 循环
+for循环
+ 
+
+
+For each循环
+This example shows a foreach loop, which passes width, spacing, and enclosure parameters for five layers of metal.    
+ 
+
+
+ 
+18.proc语法：定义函数并调用
+ 
+
+
+ 
+ 
+用带tcl程序的TVF脚本产生一个rule check: proc 里for each循环直接调用，可传入多个变量分别生成rule check。
+ 
+
+
+ 
+19.TVF function
+ 
+20.Runtime TVF Command
+1)Layer functions
+    tvf::DELETE_LAYER $layer 删除指定的层
+    tvf::GET_LAYER_ARGS layer1 [layerN…] [args] 返回层范围的边界框，作为列表{x1 y1 x2 y2}。
+    tvf::GET_LAYER_NAME $layer 返回层名
+    tvf::IS_LAYER_EMPTY $layer 如果$layer是空，返回1
+    tvf::OUTLAYER arguments 
+    tvf::SETLAYER layer_name=arguments
+    tvf::svrf_var variable_name 获取定义在SVRF rule 文件Variable声明处的变量的值。
+    tvf::sys_var variable 获取在runtime TVF的系统变量的值。
+ 
+ 
+
+
+
+
+
+1单层布联运算不支持AND OR XOR
+2不支持要求连接提取的关键字 Enclosure Touch External Cut Interact Enclose Internal
+3 flatten 操作要重点小心。
+
+	21. Tcl 
+	
+	
