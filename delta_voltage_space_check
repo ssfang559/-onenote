@@ -1,0 +1,207 @@
+EXAMPLE:
+// m1 is a secondary layer
+// avg_a is the average area of m1 intersections with a poly shape
+y = DFM PROPERTY poly m1 [avg_a = AREA(m1)/COUNT(m1)]
+															
+																	
+
+
+1.DFM Property
+将用户定义的属性关联到输入层上的各个对象，并创建一个只包含满足指定条件的对象的派生层。
+Usage
+DFM PROPERTY primary_layer [secondary_layer …]
+[INTERSECTING |
+{OVERLAP [ABUT ALSO] [SINGULAR] [MULTI | NOMULTI] [NOPUSH]
+[REGION]} |
+{NODAL [MULTI | NOMULTI] [NOPUSH]}]
+[CORNER]
+[CONNECTED | NOT CONNECTED]
+{[INSIDE OF x1 y1 x2 y2] …}
+[GLOBALXY]
+[SPLIT [ALL | PRIMARY]]
+[[ACCUMULATE [ONLY]] BY NET [ONLY] [NOHIER] [NOPSEUDO]]
+[BY CELL [ONLY] [NOHIER] [NOPSEUDO]]
+[DBU]
+[property_definition …]
+where property_definition is
+'[' property_name = expression ']' [ ['!'] constraint]…
+参数：
+OVERLAP----一个集群被定义为primary层上的一个布局对象加上secondary层上的所有布局对象，这些布局对象具有非零重叠区域。部分重叠于初级层布局对象的次级层布局对象不会被剪切。
+ABUT ALSO----可选的次要关键字，指示操作包含与primary layer布局对象相邻的secondary_layer布局对象以及与primary layer布局对象重叠的secondary_layer布局对象。
+MULTI----当指定时，该操作为集群中重叠或相邻的每个多边形分配这样一个secondary_layer布局对象。
+NODAL -----一个可选关键字，用于根据节点号对对象进行集群。要使用此选项，需要输入层上的连接信息。注意，node聚类与CONNECTED和not CONNECTED选项不兼容，因为通过node聚类分组在一起的所有几何图形必须是连接的.
+集群创造方法：INTERSACTION/OVERLAP/NODAL:
+
+
+
+对于每个多边形形状，确定多边形形状聚类中m1个形状的所有面积之和，以及聚类中所有m1个形状的总数。然后属性“avg_a”被计算为每个多边形形状的Σ(簇m1形状区域)/Σ(簇m1形状计数)。
+M1与poly相交的部分才进入计算！
+如果没有则返回0
+
+// m1 is a secondary layer
+// avg_a is the average area of m1 intersections with a poly shape
+// !COUNT returns 1 if the m1 layer is missing
+z = DFM PROPERTY poly m1 [avg_a = AREA(m1)/(COUNT(m1) + !COUNT(m1))]
+
+2.delta_voltage_space_check中的DRC
+
+Primary layer：M0net
+Secondary layer: VOLTAGE_NETS 这里是最大最小电压net
+NODAL：在同个节点
+MUlti： 显示多个
+[ - = COUNT( VOLATGE_NETS ) ] >0 :   " - "属性用于约束检查，不存储到结果层数据
+[]
+
+SPROPERTY: DFM表达式 属性访问函数 从输入层对象中访问字符串类型的属性 返回值为字符串
+	Usage
+	SPROPERTY(layer, property_name[, ordinal])
+		Layer----必需的层，包含附加属性的布局对象。如果layer是DFM属性操作中的次要层，且ordinal未指定，则SPROPERTY函数必须在VSTRING函数内;每个与初级层对象聚在一起的二级层对象上的字符串属性被连接起来，并返回一个字符串向量。
+		Property_name:必需的参数，定义感兴趣的属性的名称。这必须是一个字符串类型的属性
+		对于ordinal = 1到次要层上聚集几何图形的总数，函数调用将返回与主要层几何图形聚集在一起的指定次要层几何图形上的指定属性的值。
+PROPERTY: 从输入层的对象中访问数字DFM属性。返回值为浮点数
+	Usage
+	PROPERTY(layer, property_name[, ordinal])
+
+LDL DRC命令
+ldl::select_nets  选择属于指定net的形状，并将它们放在输出层中。
+	ldl::select_nets -output_layer layer_name {-input_layer layer_name | -gen_markers_only}
+	[-nets array_name]
+	[-annotate_net_name]
+	[-prop property_proc_list]
+	[-in_cell]
+	[-same_cell]
+	[-help]
+	-gen_markers_only 指定输出layer_name的参数是导入数组中每个网络的标记形状层。必须指定此选项或-input_layer。
+		即有input_layer不需要写这个，有这个不需要写input_layer，二者指定其一即可？
+	-nets array_name一个可选参数集，用于指定包含nets的Tcl数组的名称。数组名应该匹配ldl::import_perc -nets选项或ldl::filter_nets -selected选项中指定的数组名。如果-nets选项没有被指定为这些命令的一部分，那么-nets选项不应该在ldl::select_nets中使用。
+	-annotate_net_name  一个可选参数，指定将ICV_NET_PATH几何属性添加到输出层形状。属性值是一个引用网络内部节点ID的网络路径(通常很简单)。
+	-prop property_proc_list  一个可选参数集，指定将从Calibre PERC导出的属性转移到-output_layer净形状。property_proc_list是一个由如下形式的列表组成的Tcl列表:
+		{{property_name proc_name [-type {double | string}] [-default value]} … }
+			Property_name是由perc::export_net -annotate 定义的
+			Proc_name 用于选择要分配给选定形状的属性值的Tcl过程的名称。如果proc_name是用户定义的名称，那么相应的Tcl过程必须由用户提供。如果指定了LDL_DEFAULT_PROC，则默认的Tcl过程(工具内部)将选择属性值分配给所选形状。这简化了编码，因为用户不必编写进程。如果使用LDL_DEFAULT_PROC并且不能确定属性值(property_name不存在，或没有值，或类型错误)，就会发出警告，并按照-default中讨论的方式分配默认值。
+			-type {double | string} -指定与property_name关联的值的类型。默认值是double，这意味着该值是一个双精度浮点数。string选项意味着值是Tcl字符串。
+			-default value -如果在输入的净形状上没有找到相应的属性，则指定分配给property_name的默认值。默认值取自规则文件中的DFM Property语句。对于双精度浮点属性值，默认为NaN。对于字符串值，它是一个空字符串。指定-default可以避免将此类值赋给output属性。
+			
+Perc::check_net 检查layout中与指定条件相匹配的net，默认是所有net都被匹配。（所以程序中是所有net都检查了）
+	Usage
+	perc::check_net
+	{{[-netType {net_type_condition_list}]
+	[-pathType {path_type_condition_list}]} |
+	{[-netVoltage {net_voltage_condition_list}]
+	[-pathVoltage {path_voltage_condition_list}}
+	[-condition cond_proc]
+	[-opaqueCell cell_name_list]
+	[-cellName cell_name_list]
+	[-comment comment_str]
+
+perc::export_net导出使用LDL DRC分析的nets
+	Usage
+	perc::export_net net_iterator -check_type check_type_name
+	[-annotate ‘[’list ‘[’list name1 value1‘]’…‘]’]一个可选参数集，用于指定用户定义的网络注释。注解选项的参数是一个Tcl列表或列表的列表。
+	
+ldl::save 保存由以下命令产生的layer, ldl::select_devices, ldl::select_nets, ldl::select_p2p_result_layer, ldl::svrf
+	ldl::save -layers layer_list 要保存的层列表
+	[-checkname rule_check_name] rule的名字  ，一个参数集，用于指定在使用-format rdb(默认值)时使用的规则检查的名称。如果未指定此参数集，则规则检查名称为layer_list中的层名。此选项不用于gds或oasis关键字。
+	[-file filename] 指定输出文件的名称
+	[-format { rdb | gds | oasis }] 保存的形式， rdb参数指定ASCII RDB形式，默认是RDB
+	[-comment string] 
+	[-nopseudo] 一个可选参数，指定不报告ASCII RDB中的ICV单元格。行为类似于DFM RDB规范语句NOPSEUDO关键字。此选项仅对-format rdb有效。
+	[-cell_space]
+	[-delete]
+	[-nodelims]
+	[-help]
+	
+ldl::expot_perc 
+	这个命令将layout SPICE网列表和LDL DRC流所需的规则文件传递给CALIBRE::PERC网表模块。该命令必须在LDL DRC规则文件中指定。默认情况下，适当的文件在命令之间内部传递，不需要指定。
+	Usage
+	ldl::export_perc
+	[-netlist filename | {-source [filename] [-compute_export_context_cells | -forward_hcell]}]
+	[-faux_bin_with_original_name]
+	[-rules rule_file]
+	[-rules_preamble “rule_setting”]
+	[-help]
+	
+Ldl::execute_perc 在LDL flow中执行Calibre PERC运行。
+	Usage
+	ldl::execute_perc
+	[-netlist filename]
+	[-rules rule_file]
+	[-noauto | -flat]
+	[-help]
+	该命令执行Calibre PERC命令，作为Calibre PERC LDL DRC flow的一部分。ldl::execute_perc命令必须在ldl DRC规则文件中指定。该命令访问由ldl::export_perc命令编写的layout SPICE网络列表和规则文件。如果ldl::export_perc命令没有指定-netlist或-rules，相应的文件将在内部传递给ldl::execute_perc。如果指定了-netlist或-rules选项，请确保在ldl::export_perc命令中也指定了文件名。
+	
+Ldl::import_perc 导入calibre PERC对象用于LDL分析
+	Usage
+	ldl::import_perc -check_type check_type_name  ，check_type_name必须对应perc::export_data、perc::export_device或perc::export_net命令-check_type选项中指定的名称。
+	[-unique]
+	[-rule_check check_name]
+	[-data array_name]
+	[-instances array_name]
+	[-nets array_name] 一个可选参数集，用于指定包含从perc::export_net命令导入的所有net的Tcl数组的名称。所有Tcl数组名都应该指定作用域。例如，如果您希望数组名处于全局作用域，则在名称前添加::前缀。如果未指定此选项，则将导入的网络放置到LDL系统维护的默认数组中。
+	[-help]
+	
+Ldl::svrf 执行导出SVRF层操作，可以是文件可以是命令语句。
+	Usage
+	ldl::svrf -svrf svrf_code  svrf_code是字符串类型
+	[-tmp derived_layer_list]
+	[-help]
+
+ldl::summary_report 为LDL运行写一个总结报告。将Calibre PERC LDL运行的摘要报告文件写入指定的文件名。报告文件包含运行时统计信息以及运行期间生成的文件名。此命令必须出现在由DFM YS自动启动命令调用的Tcl过程中。
+	Usage
+	ldl::summary_report filename [REPLACE | APPEND] [-report_pass_fail]
+	REPLACE--指定覆盖已存在的文件名，这是默认行为
+	APPEND--指定添加到一个已经存在的文件名
+	-report_pass_fail --一个可选参数，在记录的末尾和报告的SUMMARY部分中提供额外的LDL运行状态信息。如果报告的PERC TOPOLOGY SUMMARY部分将PERC status显示为PASSED并且LDL结果数据库为空，则LDL状态为PASSED。否则状态为FAILED。
+
+程序流程：分为PERC程序和TVF LDL程序
+	一、PERC程序
+	调用方法：PERC Load analysis_delta_voltage INIT init_design SELECT export export_power_ground
+		1.初始化程序 init_design
+			定义电阻阈值
+			定义supply nettypes
+			    perc::define_net_type Power { lvsPower VDD? }
+			    perc::define_net_type Ground { lvsGround VSS? }
+			    perc::define_type_set Supply { Power || Ground }
+			    perc::define_ldl_checks [ list "VOLTAGE_NETS" "PG_NETS" ]
+			定义初始电压和IO netTypes
+				::perc_utils::read_voltage_file [ tvf::svrf_var PERC_VOLTAGEFILE ] -voltageMode multi -defTypeSet UserNetType
+			定义一个netType用来识别二极管负端的net
+				 perc::define_net_type_by_device DiodeOut -type { D } -pin { n } -pinNetType { { n } { !Supply } } -cell
+			定义通过电阻电压传播路径
+				 perc::create_voltage_path -type { R } -pin { p n } -pinVoltage res_control_voltage -break { Supply || UserNetType }
+			创建通过MOS的电压传播路径
+				 perc::create_voltage_path -type { MP MN } -pin { s d }
+				perc::create_voltage_path -type { C } -pin { p n }
+		2.rule check程序 export export_power_ground
+			1）export程序：
+			perc::check_net -condition export_condition \                        导出带最大最小电压值的所有net  VOLTAGE_NETS
+			                    -comment "Export net with max and min voltage"
+			export_condition程序：perc::name 导出net的name
+								Perc::voltage 导出该net的电压列表
+								找到最大最小电压
+								perc::export_net $net -check_type "VOLTAGE_NETS" \          导出net
+								                            -annotate [ list [ list NET_NAME $net_name ] \
+								                                             [ list MIN_VOLTAGE $min_voltage ] \
+								                                             [ list MAX_VOLTAGE $max_voltage ] \
+								                                      ]
+			2）export_power_ground程序：导出power ground net  PG_NETS
+			
+	二、TVF ldl 程序
+	自动启动方法：DFM YS AUTOSTART ldl init
+			读电压文件
+			分别存储最大电压和最小电压到list
+			Ldl::export_perc    将layout SPICE网表和LDL DRC所需的规则文件传递给CALIBRE::PERC网表模块
+			Ldl::execute_perc  在LDL flow中执行Calibre PERC
+			Ldl::import_perc
+			Ldl::select_nets
+			遍历最大最小电压列表：1）用DFM PROPERTY命令找出M1net、CTnet_M0
+						    2)   用EXT 和 DFM PROPERTY查space，并获取错误的layer
+			将rule写入drc.svrf文件
+			Ldl::svrf   执行svrf文件
+			Ldl::save 将结果保存
+		最后生成dfmdb文件。
+
+三、Source based LDL DRC Check
+LDL DRC一般默认在layout中运行，但也可以在与layout相匹配的source中检查对象。
+ldl::export_perc -source
+
